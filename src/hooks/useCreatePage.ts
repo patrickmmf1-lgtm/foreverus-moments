@@ -10,7 +10,7 @@ interface PageData {
   message: string;
   startDate: Date;
   plan: string;
-  photoFile?: File;
+  photoFiles: File[];
 }
 
 function generateSlug(name1: string, name2?: string): string {
@@ -30,6 +30,30 @@ function generateSlug(name1: string, name2?: string): string {
   return `${base}-${suffix}`;
 }
 
+async function uploadPhoto(file: File): Promise<string | null> {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("couple-photos")
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Upload error:", uploadError);
+    return null;
+  }
+
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from("couple-photos")
+    .getPublicUrl(uploadData.path);
+
+  return urlData.publicUrl;
+}
+
 export function useCreatePage() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,39 +61,29 @@ export function useCreatePage() {
     setIsLoading(true);
 
     try {
-      let photoUrl: string | null = null;
-
-      // Upload photo if provided
-      if (data.photoFile) {
-        const fileExt = data.photoFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("couple-photos")
-          .upload(fileName, data.photoFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          toast.error("Erro ao enviar foto. Tente novamente.");
-          setIsLoading(false);
-          return null;
+      // Upload all photos in parallel
+      const photoUrls: string[] = [];
+      
+      if (data.photoFiles.length > 0) {
+        const uploadPromises = data.photoFiles.map(file => uploadPhoto(file));
+        const results = await Promise.all(uploadPromises);
+        
+        for (const url of results) {
+          if (url) {
+            photoUrls.push(url);
+          } else {
+            toast.error("Erro ao enviar uma das fotos. Tente novamente.");
+            setIsLoading(false);
+            return null;
+          }
         }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("couple-photos")
-          .getPublicUrl(uploadData.path);
-
-        photoUrl = urlData.publicUrl;
       }
 
       // Generate unique slug
       const slug = generateSlug(data.name1, data.name2);
 
       // Insert page into database
+      // Use first photo as photo_url for backward compatibility
       const { data: pageData, error: insertError } = await supabase
         .from("pages")
         .insert({
@@ -80,7 +94,8 @@ export function useCreatePage() {
           occasion: data.occasion || null,
           message: data.message,
           start_date: data.startDate.toISOString().split("T")[0],
-          photo_url: photoUrl,
+          photo_url: photoUrls[0] || null,
+          photos: photoUrls,
           plan: data.plan,
         })
         .select("slug")

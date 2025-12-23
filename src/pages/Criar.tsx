@@ -399,7 +399,7 @@ const Criar = () => {
               transition={{ delay: 0.7 }}
               className="pt-4"
             >
-              <Button type="submit" variant="wine" size="xl" className="w-full group">
+              <Button type="submit" variant="neon" size="xl" className="w-full group">
                 Continuar para pagamento
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>

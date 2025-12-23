@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Check, Crown, Heart, Star } from "lucide-react";
+import { Check, X, Crown, Sparkles, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PlanFeature {
@@ -15,6 +15,7 @@ interface PlanCardProps {
   features: PlanFeature[];
   highlighted?: boolean;
   badge?: string;
+  badgeType?: "popular" | "premium";
   icon?: React.ReactNode;
   onSelect?: () => void;
   className?: string;
@@ -27,30 +28,35 @@ export const PlanCard = ({
   features,
   highlighted = false,
   badge,
+  badgeType = "popular",
   icon,
   onSelect,
   className,
 }: PlanCardProps) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className={cn(
         "relative rounded-2xl p-6 md:p-8 transition-all duration-300",
         highlighted
-          ? "bg-gradient-card border-2 border-gold shadow-elevated scale-105 z-10"
-          : "bg-card border border-border shadow-card hover:shadow-elevated",
-        "card-hover",
+          ? "bg-gradient-card border-2 border-primary/50 shadow-neon scale-105 z-10"
+          : "bg-card border border-border/50 hover:border-primary/30 hover:shadow-glow",
         className
       )}
     >
       {/* Badge */}
       {badge && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1 bg-gradient-gold text-gold-foreground text-xs font-semibold rounded-full shadow-soft">
-            <Crown className="w-3 h-3" />
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-full",
+            badgeType === "popular" 
+              ? "badge-popular" 
+              : "badge-premium"
+          )}>
+            {badgeType === "popular" ? <Crown className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
             {badge}
           </span>
         </div>
@@ -58,28 +64,36 @@ export const PlanCard = ({
 
       <div className="space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3 pt-2">
           {icon && (
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-light text-primary mb-2">
+            <div className={cn(
+              "inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-2",
+              highlighted 
+                ? "bg-gradient-primary text-primary-foreground shadow-glow" 
+                : "bg-primary/15 text-primary"
+            )}>
               {icon}
             </div>
           )}
-          <h3 className="text-xl font-serif font-semibold text-foreground">
+          <h3 className="text-xl font-display font-bold text-foreground">
             {name}
           </h3>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
 
         {/* Price */}
-        <div className="text-center py-4 border-y border-border">
+        <div className="text-center py-4 border-y border-border/50">
           <div className="flex items-baseline justify-center gap-1">
-            <span className="text-sm text-muted-foreground">R$</span>
-            <span className="text-4xl font-serif font-bold text-foreground">
+            <span className="text-base text-muted-foreground">R$</span>
+            <span className={cn(
+              "text-5xl font-display font-bold",
+              highlighted ? "text-gradient-primary" : "text-foreground"
+            )}>
               {price}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            pagamento único, para sempre
+          <p className="text-xs text-muted-foreground mt-2">
+            pagamento único • acesso vitalício
           </p>
         </div>
 
@@ -90,27 +104,33 @@ export const PlanCard = ({
               key={index}
               className={cn(
                 "flex items-start gap-3 text-sm",
-                feature.included ? "text-foreground" : "text-muted-foreground line-through opacity-60"
+                feature.included ? "text-foreground" : "text-muted-foreground/50"
               )}
             >
               <div
                 className={cn(
                   "flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
                   feature.included
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-primary/20 text-primary"
+                    : "bg-muted text-muted-foreground/50"
                 )}
               >
-                <Check className="w-3 h-3" />
+                {feature.included ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <X className="w-3 h-3" />
+                )}
               </div>
-              <span>{feature.text}</span>
+              <span className={!feature.included ? "line-through" : ""}>
+                {feature.text}
+              </span>
             </li>
           ))}
         </ul>
 
         {/* CTA */}
         <Button
-          variant={highlighted ? "wine" : "hero-outline"}
+          variant={highlighted ? "neon" : "hero-outline"}
           size="lg"
           className="w-full"
           onClick={onSelect}

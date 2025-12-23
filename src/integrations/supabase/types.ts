@@ -14,7 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          category: string
+          duration: number
+          emoji: string
+          id: string
+          prompt: string
+          title: string
+          type: string
+        }
+        Insert: {
+          category: string
+          duration: number
+          emoji: string
+          id?: string
+          prompt: string
+          title: string
+          type: string
+        }
+        Update: {
+          category?: string
+          duration?: number
+          emoji?: string
+          id?: string
+          prompt?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      page_activity_logs: {
+        Row: {
+          activity_id: string
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          is_favorited: boolean | null
+          page_id: string
+        }
+        Insert: {
+          activity_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_favorited?: boolean | null
+          page_id: string
+        }
+        Update: {
+          activity_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_favorited?: boolean | null
+          page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_activity_logs_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_activity_logs_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          name1: string
+          name2: string | null
+          occasion: string | null
+          photo_url: string | null
+          plan: string
+          slug: string
+          start_date: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message: string
+          name1: string
+          name2?: string | null
+          occasion?: string | null
+          photo_url?: string | null
+          plan: string
+          slug: string
+          start_date: string
+          type?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          name1?: string
+          name2?: string | null
+          occasion?: string | null
+          photo_url?: string | null
+          plan?: string
+          slug?: string
+          start_date?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

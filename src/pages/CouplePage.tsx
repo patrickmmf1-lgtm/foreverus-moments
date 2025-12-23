@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePageData } from "@/hooks/usePageData";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
-
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -59,87 +58,6 @@ const TimeCard = ({ value, label }: { value: number; label: string }) => (
 
 // Default placeholder image
 const defaultPhotoUrl = "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80";
-
-// Photo Gallery Component
-const PhotoGallery = ({ photos, photoUrl }: { photos: string[]; photoUrl: string | null }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // Combine photos array with photo_url for backward compatibility
-  const allPhotos = photos.length > 0 ? photos : (photoUrl ? [photoUrl] : [defaultPhotoUrl]);
-  
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? allPhotos.length - 1 : prev - 1));
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev === allPhotos.length - 1 ? 0 : prev + 1));
-  };
-
-  // Auto-rotate photos every 5 seconds
-  useEffect(() => {
-    if (allPhotos.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev === allPhotos.length - 1 ? 0 : prev + 1));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [allPhotos.length]);
-
-  return (
-    <div className="absolute inset-0">
-      <AnimatePresence mode="wait">
-        <motion.img
-          key={currentIndex}
-          src={allPhotos[currentIndex]}
-          alt="Foto"
-          className="w-full h-full object-cover"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-        />
-      </AnimatePresence>
-
-      {/* Navigation arrows - only show if multiple photos */}
-      {allPhotos.length > 1 && (
-        <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-black/50 transition-colors z-10"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-black/50 transition-colors z-10"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-
-          {/* Photo indicators */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-            {allPhotos.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentIndex
-                    ? "bg-white w-6"
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Overlays */}
-      <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-    </div>
-  );
-};
 
 const CouplePage = () => {
   const { slug } = useParams();
@@ -209,9 +127,6 @@ const CouplePage = () => {
       </div>
     );
   }
-
-  // Get photos array - handle both new photos array and legacy photo_url
-  const pagePhotos = (page as any).photos || [];
 
   // Calculate time differences
   const startDate = new Date(page.start_date);
@@ -350,8 +265,18 @@ const CouplePage = () => {
 
       {/* HERO SECTION - LoveMemo Style */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Photo Gallery */}
-        <PhotoGallery photos={pagePhotos} photoUrl={page.photo_url} />
+        {/* Background Photo */}
+        <div className="absolute inset-0">
+          <img
+            src={page.photo_url || defaultPhotoUrl}
+            alt="Foto"
+            className="w-full h-full object-cover"
+          />
+          {/* Subtle dark overlay */}
+          <div className="absolute inset-0 bg-black/30" />
+          {/* Gradient fade at bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        </div>
 
         {/* Top Header */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">

@@ -99,6 +99,7 @@ export type Database = {
           name2: string | null
           occasion: string | null
           photo_url: string | null
+          photos: string[] | null
           plan: string
           slug: string
           start_date: string
@@ -113,6 +114,7 @@ export type Database = {
           name2?: string | null
           occasion?: string | null
           photo_url?: string | null
+          photos?: string[] | null
           plan: string
           slug: string
           start_date: string
@@ -127,6 +129,7 @@ export type Database = {
           name2?: string | null
           occasion?: string | null
           photo_url?: string | null
+          photos?: string[] | null
           plan?: string
           slug?: string
           start_date?: string

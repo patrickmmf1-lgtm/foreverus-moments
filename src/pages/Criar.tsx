@@ -141,133 +141,131 @@ const Criar = () => {
     <div className="min-h-screen bg-background">
       <Header variant="minimal" />
 
-      <main className="container py-8 md:py-12">
-        <div className="max-w-2xl mx-auto">
+      <main className="container px-4 py-6 md:py-12">
+        <div className="max-w-lg mx-auto">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-6"
           >
-            <HeartInfinity size="lg" className="mx-auto mb-4" />
-            <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-2">
+            <HeartInfinity size="md" className="mx-auto mb-3" />
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-1">
               Criar página {getTypeLabel()}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Preencha os dados e escolha seu plano
             </p>
           </motion.div>
 
-          {/* Type Tabs */}
+          {/* Type Tabs - Mobile optimized */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="mb-6"
           >
             <Tabs
               value={type}
               onValueChange={(v) => setValue("type", v as "couple" | "friends" | "pet")}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3 bg-card border border-border">
-                <TabsTrigger value="couple" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsList className="grid w-full grid-cols-3 h-12 bg-card border border-border rounded-xl">
+                <TabsTrigger value="couple" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Heart className="w-4 h-4" />
-                  <span className="hidden sm:inline">Casal</span>
+                  <span>Casal</span>
                 </TabsTrigger>
-                <TabsTrigger value="friends" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger value="friends" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Amigos</span>
+                  <span>Amigos</span>
                 </TabsTrigger>
-                <TabsTrigger value="pet" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TabsTrigger value="pet" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <PawPrint className="w-4 h-4" />
-                  <span className="hidden sm:inline">Pet</span>
+                  <span>Pet</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </motion.div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Photo Upload */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Photo Upload - Mobile optimized */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="space-y-4"
+              className="space-y-3"
             >
-              <Label className="text-base font-medium">Foto</Label>
-              <div className="flex flex-col items-center gap-4">
-                <label
-                  htmlFor="photo"
-                  className={cn(
-                    "relative w-40 h-40 rounded-2xl cursor-pointer overflow-hidden transition-all",
-                    "border-2 border-dashed border-border hover:border-primary",
-                    "flex items-center justify-center bg-card",
-                    photoPreview && "border-solid border-gold"
-                  )}
-                >
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-center p-4">
-                      <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                      <span className="text-sm text-muted-foreground">
-                        Clique para enviar
-                      </span>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    id="photo"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
+              <Label className="text-sm font-medium">Foto do casal</Label>
+              <label
+                htmlFor="photo"
+                className={cn(
+                  "relative w-full aspect-video max-w-xs mx-auto rounded-2xl cursor-pointer overflow-hidden transition-all flex",
+                  "border-2 border-dashed border-border hover:border-primary active:scale-[0.98]",
+                  "items-center justify-center bg-card",
+                  photoPreview && "border-solid border-primary"
+                )}
+              >
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
                   />
-                </label>
-                <p className="text-xs text-muted-foreground">
-                  JPG, PNG ou WEBP. Máximo 5MB.
-                </p>
-              </div>
+                ) : (
+                  <div className="text-center p-6">
+                    <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">
+                      Toque para enviar
+                    </span>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      JPG, PNG ou WEBP (máx 5MB)
+                    </p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="photo"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                />
+              </label>
             </motion.div>
 
-            {/* Names */}
+            {/* Names - Stacked on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="grid gap-4 sm:grid-cols-2"
+              className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="name1">
+                <Label htmlFor="name1" className="text-sm">
                   {type === "pet" ? "Nome do pet" : "Primeiro nome"}
                 </Label>
                 <Input
                   id="name1"
                   placeholder={type === "pet" ? "Ex: Thor" : "Ex: Ana"}
-                  className="input-romantic"
+                  className="input-romantic h-12 text-base"
                   {...register("name1")}
                 />
                 {errors.name1 && (
-                  <p className="text-sm text-destructive">{errors.name1.message}</p>
+                  <p className="text-xs text-destructive">{errors.name1.message}</p>
                 )}
               </div>
 
               {type !== "pet" && (
                 <div className="space-y-2">
-                  <Label htmlFor="name2">Segundo nome</Label>
+                  <Label htmlFor="name2" className="text-sm">Segundo nome</Label>
                   <Input
                     id="name2"
                     placeholder="Ex: João"
-                    className="input-romantic"
+                    className="input-romantic h-12 text-base"
                     {...register("name2")}
                   />
                   {errors.name2 && (
-                    <p className="text-sm text-destructive">{errors.name2.message}</p>
+                    <p className="text-xs text-destructive">{errors.name2.message}</p>
                   )}
                 </div>
               )}
@@ -280,11 +278,11 @@ const Criar = () => {
               transition={{ delay: 0.35 }}
               className="space-y-2"
             >
-              <Label htmlFor="occasion">Título/Ocasião (opcional)</Label>
+              <Label htmlFor="occasion" className="text-sm">Título/Ocasião (opcional)</Label>
               <Input
                 id="occasion"
-                placeholder="Ex: Nossa História de Amor, Dia dos Namorados"
-                className="input-romantic"
+                placeholder="Ex: Nossa História de Amor"
+                className="input-romantic h-12 text-base"
                 {...register("occasion")}
               />
             </motion.div>
@@ -296,19 +294,19 @@ const Criar = () => {
               transition={{ delay: 0.4 }}
               className="space-y-2"
             >
-              <Label>
-                {type === "pet" ? "Data da adoção" : "Data do início"}
+              <Label className="text-sm">
+                {type === "pet" ? "Data da adoção" : "Quando começaram?"}
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal input-romantic",
+                      "w-full h-12 justify-start text-left font-normal text-base input-romantic",
                       !startDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-3 h-5 w-5" />
                     {startDate ? (
                       format(startDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
                     ) : (
@@ -316,11 +314,15 @@ const Criar = () => {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0" align="center">
                   <Calendar
                     mode="single"
                     selected={startDate}
-                    onSelect={(date) => date && setValue("startDate", date)}
+                    onSelect={(date) => {
+                      if (date) {
+                        setValue("startDate", date, { shouldValidate: true });
+                      }
+                    }}
                     disabled={(date) => date > new Date()}
                     initialFocus
                     className="pointer-events-auto"
@@ -328,7 +330,7 @@ const Criar = () => {
                 </PopoverContent>
               </Popover>
               {errors.startDate && (
-                <p className="text-sm text-destructive">{errors.startDate.message}</p>
+                <p className="text-xs text-destructive">{errors.startDate.message}</p>
               )}
             </motion.div>
 
@@ -340,7 +342,7 @@ const Criar = () => {
               className="space-y-2"
             >
               <div className="flex items-center justify-between">
-                <Label htmlFor="message">Mensagem surpresa</Label>
+                <Label htmlFor="message" className="text-sm">Mensagem surpresa 💜</Label>
                 <span className={cn(
                   "text-xs",
                   message.length > 280 ? "text-destructive" : "text-muted-foreground"
@@ -350,40 +352,41 @@ const Criar = () => {
               </div>
               <Textarea
                 id="message"
-                placeholder="Escreva uma mensagem especial que aparecerá quando tocarem em 'Abrir surpresa'..."
-                className="input-romantic min-h-[100px] resize-none"
+                placeholder="Escreva algo que arrepia o coração..."
+                className="input-romantic min-h-[120px] resize-none text-base leading-relaxed"
                 {...register("message")}
               />
               {errors.message && (
-                <p className="text-sm text-destructive">{errors.message.message}</p>
+                <p className="text-xs text-destructive">{errors.message.message}</p>
               )}
             </motion.div>
 
-            {/* Plan Selection */}
+            {/* Plan Selection - Mobile optimized cards */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="space-y-4"
+              className="space-y-3"
             >
-              <Label className="text-base font-medium">Escolha seu plano</Label>
-              <div className="grid gap-3">
+              <Label className="text-sm font-medium">Escolha seu plano</Label>
+              <div className="space-y-3">
                 {plans.map((plan) => {
                   const planLimits = PLAN_LIMITS[plan.id as PlanId];
+                  const isSelected = selectedPlan === plan.id;
                   return (
                     <label
                       key={plan.id}
                       className={cn(
-                        "relative flex flex-col gap-3 p-4 rounded-xl cursor-pointer transition-all",
+                        "relative flex flex-col gap-3 p-4 rounded-2xl cursor-pointer transition-all active:scale-[0.98]",
                         "border-2",
-                        selectedPlan === plan.id
+                        isSelected
                           ? plan.highlighted
-                            ? "border-gold bg-gold-light shadow-card"
-                            : "border-primary bg-primary-light shadow-card"
-                          : "border-border bg-card hover:border-primary/50"
+                            ? "border-gold bg-gold/5 shadow-lg"
+                            : "border-primary bg-primary/5 shadow-lg"
+                          : "border-border bg-card"
                       )}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-start gap-3">
                         <input
                           type="radio"
                           value={plan.id}
@@ -393,53 +396,61 @@ const Criar = () => {
                         
                         {/* Radio indicator */}
                         <div className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                          selectedPlan === plan.id
+                          "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5",
+                          isSelected
                             ? "border-primary bg-primary"
-                            : "border-muted-foreground"
+                            : "border-muted-foreground/50"
                         )}>
-                          {selectedPlan === plan.id && (
-                            <Check className="w-3 h-3 text-primary-foreground" />
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
                           )}
                         </div>
 
                         {/* Plan info */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{plan.name}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground">{plan.name}</span>
                             {plan.highlighted && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-gold text-gold-foreground font-medium">
-                                Mais escolhido
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-gold text-gold-foreground font-bold uppercase tracking-wide">
+                                Popular
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{plan.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{plan.description}</p>
                         </div>
 
                         {/* Price */}
-                        <div className="text-right">
-                          <span className="text-xs text-muted-foreground">R$</span>
-                          <span className="text-2xl font-serif font-bold text-foreground">
-                            {plan.price}
-                          </span>
+                        <div className="text-right flex-shrink-0">
+                          <div className="flex items-baseline gap-0.5">
+                            <span className="text-xs text-muted-foreground">R$</span>
+                            <span className="text-xl font-display font-bold text-foreground">
+                              {plan.price}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">único</span>
                         </div>
                       </div>
 
-                      {/* Features list */}
-                      {selectedPlan === plan.id && (
+                      {/* Features list - Always visible when selected */}
+                      {isSelected && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="pt-3 border-t border-border/50"
+                          className="pt-3 border-t border-border/30"
                         >
-                          <ul className="grid grid-cols-2 gap-2">
-                            {planLimits.features.map((feature, idx) => (
+                          <ul className="grid gap-1.5">
+                            {planLimits.features.slice(0, 4).map((feature, idx) => (
                               <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Check className="w-3 h-3 text-primary flex-shrink-0" />
+                                <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                                 {feature}
                               </li>
                             ))}
+                            {planLimits.features.length > 4 && (
+                              <li className="text-xs text-primary font-medium mt-1">
+                                +{planLimits.features.length - 4} benefícios
+                              </li>
+                            )}
                           </ul>
                         </motion.div>
                       )}
@@ -449,32 +460,25 @@ const Criar = () => {
               </div>
             </motion.div>
 
-            {/* Submit */}
+            {/* Submit - Mobile optimized */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="pt-4"
+              className="pt-4 pb-2"
             >
               <Button 
                 type="submit" 
                 variant="neon" 
                 size="xl" 
-                className="w-full group"
+                className="w-full h-14 text-base font-semibold group"
                 disabled={isLoading}
               >
                 {isLoading ? "Criando..." : "Criar minha página"}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                Ao continuar, você concorda com nossos{" "}
-                <a href="/termos" className="underline hover:text-primary">
-                  termos de uso
-                </a>{" "}
-                e{" "}
-                <a href="/privacidade" className="underline hover:text-primary">
-                  política de privacidade
-                </a>.
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                Pagamento único · Sem assinatura · Acesso vitalício
               </p>
             </motion.div>
           </form>

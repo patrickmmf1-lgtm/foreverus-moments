@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, Copy, Download, ExternalLink, Smartphone } from "lucide-react";
 import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,10 +12,12 @@ import { toast } from "sonner";
 
 const Sucesso = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [copied, setCopied] = useState(false);
 
-  // Demo data
-  const pageLink = "https://foreverus.com/p/ana-joao-x7k2";
+  const slug = searchParams.get("slug") || "demo";
+  const baseUrl = window.location.origin;
+  const pageLink = `${baseUrl}/p/${slug}`;
   const isPremium = true;
 
   const handleCopyLink = async () => {
@@ -25,8 +28,28 @@ const Sucesso = () => {
   };
 
   const handleDownloadQR = () => {
-    toast.success("QR Code baixado!");
-    // In production, this would download the actual QR code
+    const svg = document.getElementById("qr-code");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL("image/png");
+
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `qrcode-${slug}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+      toast.success("QR Code baixado!");
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   return (
@@ -96,21 +119,18 @@ const Sucesso = () => {
               </Button>
             </div>
 
-            {/* QR Code placeholder */}
+            {/* QR Code */}
             <div className="space-y-3">
-              <div className="w-40 h-40 mx-auto rounded-xl bg-secondary flex items-center justify-center border-2 border-dashed border-border">
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto bg-foreground/10 rounded-lg grid grid-cols-3 gap-1 p-2">
-                    {[...Array(9)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`rounded-sm ${
-                          Math.random() > 0.3 ? "bg-foreground" : "bg-transparent"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
+              <div className="w-44 h-44 mx-auto rounded-xl bg-white p-3 flex items-center justify-center">
+                <QRCodeSVG
+                  id="qr-code"
+                  value={pageLink}
+                  size={160}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  level="M"
+                  includeMargin={false}
+                />
               </div>
               <Button
                 variant="outline"
@@ -128,7 +148,7 @@ const Sucesso = () => {
                 variant="hero"
                 size="lg"
                 className="w-full"
-                onClick={() => navigate("/p/demo")}
+                onClick={() => navigate(`/p/${slug}`)}
               >
                 <ExternalLink className="w-4 h-4" />
                 Ver minha página
@@ -148,9 +168,7 @@ const Sucesso = () => {
 
             {/* Email notice */}
             <p className="text-xs text-muted-foreground">
-              Enviamos o link e o QR Code para seu e-mail.
-              <br />
-              Verifique também a caixa de spam.
+              Guarde este link para acessar sua página quando quiser!
             </p>
           </motion.div>
         </div>

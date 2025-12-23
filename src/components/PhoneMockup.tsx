@@ -1,17 +1,46 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { differenceInDays, differenceInYears, differenceInMonths } from "date-fns";
+import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
+import { Gift, Volume2 } from "lucide-react";
 
 // Demo data
 const demoData = {
-  names: "Ana & João",
+  name1: "Ana",
+  name2: "João",
+  occasion: "Nossa História de Amor",
   startDate: new Date("2022-06-15"),
+  photoUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&q=80",
 };
 
+// Mini time card for mockup
+const MiniTimeCard = ({ value, label }: { value: number; label: string }) => (
+  <div className="flex flex-col items-center">
+    <div className="w-8 h-9 md:w-9 md:h-10 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center mb-0.5">
+      <span className="text-xs md:text-sm font-bold text-white tabular-nums">
+        {String(value).padStart(2, '0')}
+      </span>
+    </div>
+    <span className="text-[7px] md:text-[8px] text-white/60 uppercase tracking-wider">
+      {label}
+    </span>
+  </div>
+);
+
 export const PhoneMockup = () => {
-  const now = new Date();
-  const totalDays = differenceInDays(now, demoData.startDate);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const years = differenceInYears(now, demoData.startDate);
   const months = differenceInMonths(now, demoData.startDate) % 12;
+  const totalDays = differenceInDays(now, demoData.startDate);
+  const days = Math.floor((totalDays % 365) % 30);
+  const hours = differenceInHours(now, demoData.startDate) % 24;
+  const minutes = differenceInMinutes(now, demoData.startDate) % 60;
+  const seconds = differenceInSeconds(now, demoData.startDate) % 60;
 
   return (
     <div className="relative">
@@ -33,120 +62,67 @@ export const PhoneMockup = () => {
               <div className="w-20 h-5 rounded-full bg-black" />
             </div>
             
-            {/* Screen content - Tinder/LoveYuu style */}
+            {/* Screen content - LoveMemo style */}
             <div className="relative h-[480px] md:h-[520px] overflow-hidden">
-              {/* Background gradient (simulating couple photo) */}
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-900 via-purple-900 to-violet-950" />
-              
-              {/* Overlay pattern */}
-              <div 
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundImage: `radial-gradient(circle at 30% 70%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
-                                   radial-gradient(circle at 70% 30%, rgba(139, 92, 246, 0.4) 0%, transparent 50%)`
-                }}
+              {/* Background Photo */}
+              <img
+                src={demoData.photoUrl}
+                alt="Foto do casal"
+                className="absolute inset-0 w-full h-full object-cover"
               />
+              
+              {/* Subtle dark overlay */}
+              <div className="absolute inset-0 bg-black/25" />
+              
+              {/* Gradient fade at bottom */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-              {/* Floating hearts */}
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute text-white/10"
-                  style={{
-                    left: `${15 + i * 18}%`,
-                    top: `${25 + (i % 2) * 20}%`,
-                    fontSize: `${1.2 + (i % 2) * 0.5}rem`
-                  }}
-                  animate={{
-                    y: [-10, 10, -10],
-                    opacity: [0.05, 0.15, 0.05]
-                  }}
-                  transition={{
-                    duration: 3 + i,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: i * 0.3
-                  }}
-                >
-                  ♥
-                </motion.div>
-              ))}
-
-              {/* Dark fade gradient from bottom */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
-              {/* Content */}
-              <div className="relative h-full flex flex-col justify-end p-4 pb-6">
-                {/* Small photo circle */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-400 to-purple-500 p-0.5 shadow-lg">
-                    <div className="w-full h-full rounded-full bg-black/30 flex items-center justify-center">
-                      <span className="text-2xl">💑</span>
-                    </div>
-                  </div>
+              {/* Top Header */}
+              <div className="absolute top-0 left-0 right-0 p-3 flex items-center justify-between">
+                {/* Tap to open surprise */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[9px] font-medium">
+                  <Gift className="w-3 h-3" />
+                  <span>Toque para abrir</span>
                 </div>
 
-                {/* Names */}
-                <h2 className="text-xl font-display font-bold text-white text-center mb-3">
-                  {demoData.names}
-                </h2>
+                {/* Sound toggle */}
+                <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                  <Volume2 className="w-3.5 h-3.5" />
+                </div>
+              </div>
 
-                {/* Juntos label */}
-                <p className="text-rose-300 text-[10px] uppercase tracking-[0.2em] text-center font-medium mb-1">
-                  Juntos
+              {/* Content - Bottom */}
+              <div className="absolute inset-0 flex flex-col justify-end p-4 pb-5">
+                {/* Occasion */}
+                <p className="text-center text-white/70 text-[10px] mb-1">
+                  {demoData.occasion}
                 </p>
 
-                {/* Giant days counter */}
-                <div className="text-center mb-2">
-                  <span 
-                    className="text-5xl md:text-6xl font-display font-bold text-white"
-                    style={{ textShadow: '0 0 40px rgba(236, 72, 153, 0.5)' }}
-                  >
-                    {totalDays.toLocaleString('pt-BR')}
-                  </span>
-                  <span className="text-sm text-white/60 ml-2">dias</span>
-                </div>
-
-                {/* Breakdown */}
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  {years > 0 && (
-                    <>
-                      <div className="text-center">
-                        <span className="text-lg font-display font-bold text-white">{years}</span>
-                        <p className="text-[9px] text-white/50 uppercase">{years === 1 ? "ano" : "anos"}</p>
-                      </div>
-                      <div className="w-px h-4 bg-white/20" />
-                    </>
-                  )}
-                  <div className="text-center">
-                    <span className="text-lg font-display font-bold text-white">{months}</span>
-                    <p className="text-[9px] text-white/50 uppercase">{months === 1 ? "mês" : "meses"}</p>
-                  </div>
-                </div>
-
-                {/* Activity suggestion mini card */}
-                <motion.div 
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5 }}
+                {/* Couple Names - Script Font */}
+                <h2 
+                  className="text-2xl md:text-3xl text-white text-center mb-3"
+                  style={{ 
+                    fontFamily: 'var(--font-script)',
+                    textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                  }}
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-sm">💕</span>
-                    <span className="text-[10px] font-medium text-white/80">Sugestão de hoje</span>
-                  </div>
-                  <p className="text-[10px] text-white/60 leading-relaxed">
-                    Escrevam uma carta curta um para o outro...
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <button className="flex-1 text-[10px] bg-rose-500/80 text-white rounded-lg py-1.5 font-medium">
-                      ✓ Feito!
-                    </button>
-                    <button className="text-[10px] bg-white/10 border border-white/20 text-white/70 rounded-lg px-2 py-1.5">
-                      🔄
-                    </button>
-                  </div>
-                </motion.div>
+                  {demoData.name1} & {demoData.name2}
+                </h2>
+
+                {/* Together for label */}
+                <p className="text-white/60 text-[9px] uppercase tracking-[0.2em] text-center font-medium mb-2">
+                  Juntos há
+                </p>
+
+                {/* Time Cards */}
+                <div className="flex items-center justify-center gap-1.5 mb-3">
+                  <MiniTimeCard value={years} label="anos" />
+                  <MiniTimeCard value={months} label="meses" />
+                  <MiniTimeCard value={days} label="dias" />
+                  <MiniTimeCard value={hours} label="hrs" />
+                  <MiniTimeCard value={minutes} label="min" />
+                  <MiniTimeCard value={seconds} label="seg" />
+                </div>
               </div>
             </div>
 

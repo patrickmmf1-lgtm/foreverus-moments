@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds, addYears, format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown } from "lucide-react";
+import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -80,12 +79,30 @@ const demoPage = {
   title: "Ana & João",
   name1: "Ana",
   name2: "João",
+  occasion: "Nossa História de Amor",
   message: "Você é meu melhor amigo, meu amor e minha pessoa favorita no mundo. Cada dia ao seu lado é uma aventura que eu escolho viver. Te amo infinitamente! 💕",
   startDate: new Date("2022-06-15"),
   plan: "29_90" as const,
-  // Demo couple photo - using a gradient placeholder
-  photoUrl: null,
+  photoUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80",
 };
+
+// Time unit card component
+const TimeCard = ({ value, label }: { value: number; label: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex flex-col items-center"
+  >
+    <div className="w-12 h-14 md:w-14 md:h-16 rounded-xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center mb-1">
+      <span className="text-xl md:text-2xl font-bold text-white tabular-nums">
+        {String(value).padStart(2, '0')}
+      </span>
+    </div>
+    <span className="text-[10px] md:text-xs text-white/70 uppercase tracking-wider font-medium">
+      {label}
+    </span>
+  </motion.div>
+);
 
 const CouplePage = () => {
   const { slug } = useParams();
@@ -94,7 +111,8 @@ const CouplePage = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [currentSection, setCurrentSection] = useState<'hero' | 'activities'>('hero');
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [showSurprise, setShowSurprise] = useState(false);
 
   // Update clock every second
   useEffect(() => {
@@ -103,18 +121,13 @@ const CouplePage = () => {
   }, []);
 
   // Calculate time differences
-  const totalDays = differenceInDays(now, demoPage.startDate);
   const years = differenceInYears(now, demoPage.startDate);
   const months = differenceInMonths(now, demoPage.startDate) % 12;
+  const totalDays = differenceInDays(now, demoPage.startDate);
   const days = Math.floor((totalDays % 365) % 30);
   const hours = differenceInHours(now, demoPage.startDate) % 24;
   const minutes = differenceInMinutes(now, demoPage.startDate) % 60;
   const seconds = differenceInSeconds(now, demoPage.startDate) % 60;
-
-  // Next anniversary
-  const thisYearAnniversary = new Date(now.getFullYear(), demoPage.startDate.getMonth(), demoPage.startDate.getDate());
-  const nextAnniversary = thisYearAnniversary > now ? thisYearAnniversary : addYears(thisYearAnniversary, 1);
-  const daysUntilAnniversary = differenceInDays(nextAnniversary, now);
 
   const handleRefresh = () => {
     const availableActivities = activitiesLibrary.filter(a => a.id !== currentActivity.id);
@@ -162,8 +175,16 @@ const CouplePage = () => {
     }
   };
 
+  const handleOpenSurprise = () => {
+    setShowSurprise(true);
+    setShowConfetti(true);
+    toast.success("🎁 Surpresa aberta!", {
+      description: demoPage.message,
+    });
+    setTimeout(() => setShowConfetti(false), 3000);
+  };
+
   const scrollToActivities = () => {
-    setCurrentSection('activities');
     document.getElementById('activities-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -202,187 +223,110 @@ const CouplePage = () => {
         )}
       </AnimatePresence>
 
-      {/* HERO SECTION - Fullscreen Photo with Fade */}
-      <section className="relative h-screen w-full overflow-hidden snap-start">
-        {/* Background Photo/Gradient */}
+      {/* HERO SECTION - LoveMemo Style */}
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Background Photo */}
         <div className="absolute inset-0">
-          {/* Demo: Using a romantic gradient as placeholder for couple photo */}
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-900 via-purple-900 to-violet-950" />
-          
-          {/* Overlay pattern for texture */}
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
-                               radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-                               radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.2) 0%, transparent 70%)`
-            }}
+          <img
+            src={demoPage.photoUrl}
+            alt="Foto do casal"
+            className="w-full h-full object-cover"
           />
-          
-          {/* Floating hearts decoration */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute text-white/10"
-                style={{
-                  left: `${10 + i * 12}%`,
-                  top: `${20 + (i % 3) * 25}%`,
-                  fontSize: `${2 + (i % 3)}rem`
-                }}
-                animate={{
-                  y: [-20, 20, -20],
-                  rotate: [-5, 5, -5],
-                  opacity: [0.05, 0.15, 0.05]
-                }}
-                transition={{
-                  duration: 4 + i,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.5
-                }}
-              >
-                ♥
-              </motion.div>
-            ))}
-          </div>
+          {/* Subtle dark overlay */}
+          <div className="absolute inset-0 bg-black/30" />
+          {/* Gradient fade at bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         </div>
 
-        {/* Dark fade gradient from bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-
-        {/* Content overlay */}
-        <div className="relative h-full flex flex-col justify-end pb-8 px-6">
-          {/* Couple photo placeholder in circle */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="absolute top-12 left-1/2 -translate-x-1/2"
-          >
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-rose-400 to-purple-500 p-1 shadow-2xl">
-              <div className="w-full h-full rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-                <span className="text-5xl">💑</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Names */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+        {/* Top Header */}
+        <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
+          {/* Tap to open surprise */}
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-display font-bold text-white text-center mb-6"
+            onClick={handleOpenSurprise}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-colors"
           >
-            {demoPage.title}
+            <Gift className="w-4 h-4" />
+            <span>Toque para abrir sua surpresa</span>
+          </motion.button>
+
+          {/* Sound toggle */}
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-colors"
+          >
+            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </motion.button>
+        </div>
+
+        {/* Content overlay - centered at bottom */}
+        <div className="absolute inset-0 flex flex-col justify-end pb-8 px-6">
+          {/* Occasion/Event title */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-white/80 text-sm md:text-base mb-2"
+          >
+            {demoPage.occasion}
+          </motion.p>
+
+          {/* Couple Names - Script Font */}
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-5xl md:text-6xl lg:text-7xl text-white text-center mb-6"
+            style={{ 
+              fontFamily: 'var(--font-script)',
+              textShadow: '0 2px 20px rgba(0,0,0,0.5)'
+            }}
+          >
+            {demoPage.name1} & {demoPage.name2}
           </motion.h1>
 
-          {/* JUNTOS text */}
+          {/* TOGETHER FOR label */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-rose-300 text-sm uppercase tracking-[0.3em] text-center font-medium mb-2"
+            transition={{ delay: 0.7 }}
+            className="text-white/70 text-xs md:text-sm uppercase tracking-[0.3em] text-center font-medium mb-4"
           >
-            Juntos
+            Juntos há
           </motion.p>
 
-          {/* Giant counter - MAIN DAYS */}
+          {/* Time Cards Grid */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center mb-4"
-          >
-            <div className="flex items-baseline justify-center gap-3">
-              <motion.span
-                key={totalDays}
-                initial={{ scale: 1.1 }}
-                animate={{ scale: 1 }}
-                className="text-7xl md:text-8xl lg:text-9xl font-display font-bold text-white"
-                style={{ textShadow: '0 0 60px rgba(236, 72, 153, 0.5)' }}
-              >
-                {totalDays.toLocaleString('pt-BR')}
-              </motion.span>
-              <span className="text-2xl md:text-3xl text-white/70 font-medium">dias</span>
-            </div>
-          </motion.div>
-
-          {/* Breakdown: years, months, days */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center justify-center gap-6 md:gap-8 mb-4"
-          >
-            {years > 0 && (
-              <div className="text-center">
-                <span className="text-3xl md:text-4xl font-display font-bold text-white">{years}</span>
-                <p className="text-xs text-white/60 uppercase tracking-wider">{years === 1 ? "ano" : "anos"}</p>
-              </div>
-            )}
-            <div className="w-px h-8 bg-white/20" />
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-display font-bold text-white">{months}</span>
-              <p className="text-xs text-white/60 uppercase tracking-wider">{months === 1 ? "mês" : "meses"}</p>
-            </div>
-            <div className="w-px h-8 bg-white/20" />
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-display font-bold text-white">{days}</span>
-              <p className="text-xs text-white/60 uppercase tracking-wider">dias</p>
-            </div>
-          </motion.div>
-
-          {/* Live clock with pulsing animation */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="flex items-center justify-center gap-1 text-white/50 text-lg font-mono mb-6"
-          >
-            <span className="w-8 text-center">{String(hours).padStart(2, '0')}</span>
-            <motion.span
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            >
-              :
-            </motion.span>
-            <span className="w-8 text-center">{String(minutes).padStart(2, '0')}</span>
-            <motion.span
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            >
-              :
-            </motion.span>
-            <span className="w-8 text-center">{String(seconds).padStart(2, '0')}</span>
-          </motion.div>
-
-          {/* Next anniversary badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex items-center justify-center gap-2 mb-8"
+            className="flex items-center justify-center gap-2 md:gap-3 mb-8"
           >
-            <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-sm text-white/80">
-                <span className="text-rose-300 font-bold">{daysUntilAnniversary}</span> dias para {differenceInYears(nextAnniversary, demoPage.startDate)} anos juntos
-              </p>
-            </div>
+            <TimeCard value={years} label="anos" />
+            <TimeCard value={months} label="meses" />
+            <TimeCard value={days} label="dias" />
+            <TimeCard value={hours} label="horas" />
+            <TimeCard value={minutes} label="min" />
+            <TimeCard value={seconds} label="seg" />
           </motion.div>
 
-          {/* Share button */}
+          {/* Action buttons */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="flex justify-center mb-6"
+            className="flex justify-center gap-3 mb-6"
           >
             <Button
-              variant="glass"
+              variant="outline"
               size="lg"
               onClick={handleShare}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-md"
             >
               <Share2 className="w-4 h-4 mr-2" />
               Compartilhar
@@ -398,7 +342,7 @@ const CouplePage = () => {
               y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
             }}
             onClick={scrollToActivities}
-            className="flex flex-col items-center gap-1 text-white/40 hover:text-white/60 transition-colors mx-auto"
+            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/70 transition-colors mx-auto"
           >
             <span className="text-xs uppercase tracking-wider">Atividades</span>
             <ChevronDown className="w-5 h-5" />
@@ -409,7 +353,7 @@ const CouplePage = () => {
       {/* ACTIVITIES SECTION */}
       <section 
         id="activities-section" 
-        className="min-h-screen bg-background py-8 px-6 snap-start"
+        className="min-h-screen bg-background py-8 px-6"
       >
         <div className="max-w-lg mx-auto space-y-6">
           {/* Section header */}

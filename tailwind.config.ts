@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         display: ['Montserrat', 'Futura', 'sans-serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        script: ['Great Vibes', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",

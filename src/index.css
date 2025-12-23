@@ -60,6 +60,7 @@
     /* Typography - Modern sans-serif */
     --font-display: 'Montserrat', 'Futura', sans-serif;
     --font-sans: 'Inter', system-ui, sans-serif;
+    --font-script: 'Great Vibes', cursive;
 
     /* Shadows with glow effects */
     --shadow-soft: 0 4px 20px -4px hsl(330 85% 60% / 0.15);

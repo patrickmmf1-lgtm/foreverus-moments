@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -7,8 +7,8 @@ import PlanCard from "@/components/PlanCard";
 import Testimonial from "@/components/Testimonial";
 import FAQ from "@/components/FAQ";
 import HeartInfinity from "@/components/HeartInfinity";
-import Counter from "@/components/Counter";
-import { Camera, Heart, Sparkles, Calendar, Gift, Smartphone, ArrowRight } from "lucide-react";
+import PhoneMockup from "@/components/PhoneMockup";
+import { Heart, Sparkles, Gift, ArrowRight, CreditCard, Mail, PartyPopper, FileText } from "lucide-react";
 
 const plans = [
   {
@@ -33,6 +33,8 @@ const plans = [
     price: "19,90",
     description: "Para usar todo dia",
     icon: <Heart className="w-6 h-6" />,
+    badge: "Mais popular",
+    badgeType: "popular" as const,
     features: [
       { text: "Página ativa para sempre", included: true },
       { text: "Contador de dias juntos", included: true },
@@ -51,7 +53,8 @@ const plans = [
     description: "A melhor experiência",
     icon: <Sparkles className="w-6 h-6" />,
     highlighted: true,
-    badge: "Mais escolhido",
+    badge: "Melhor custo-benefício",
+    badgeType: "premium" as const,
     features: [
       { text: "Página ativa para sempre", included: true },
       { text: "Contador de dias juntos", included: true },
@@ -105,148 +108,294 @@ const testimonials = [
   },
 ];
 
-const steps = [
-  {
-    icon: <Camera className="w-8 h-8" />,
-    title: "Crie sua página",
-    description: "Escolha uma foto especial, escreva uma mensagem e defina a data do relacionamento.",
-  },
-  {
-    icon: <Calendar className="w-8 h-8" />,
-    title: "Veja o contador",
-    description: "Acompanhe quantos dias, meses e anos estão juntos. Cada dia é uma conquista!",
-  },
-  {
-    icon: <Heart className="w-8 h-8" />,
-    title: "Use as atividades",
-    description: "Todo dia uma nova sugestão para vocês fazerem juntos. Se escolham, sempre.",
-  },
-];
-
 const Index = () => {
   const navigate = useNavigate();
-  
-  // Example date for demo counter
-  const demoDate = new Date();
-  demoDate.setFullYear(demoDate.getFullYear() - 2);
-  demoDate.setMonth(demoDate.getMonth() - 3);
-  demoDate.setDate(demoDate.getDate() - 15);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Section */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden">
+      <section className="relative pt-12 pb-20 md:pt-16 md:pb-32 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute inset-0 bg-pattern-dots opacity-30" />
+        <div className="absolute inset-0 bg-gradient-radial-top" />
+        
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 rounded-full bg-primary/30"
+              style={{
+                left: `${15 + i * 15}%`,
+                top: `${20 + (i % 3) * 25}%`,
+              }}
+              animate={{
+                y: [-20, 20, -20],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 4 + i,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
         
         <div className="container relative">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            {/* Text content */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="space-y-4"
+              className="text-center lg:text-left space-y-6"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-light text-primary text-sm font-medium">
-                <HeartInfinity size="sm" animate />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 text-primary text-sm font-medium">
+                <HeartInfinity size="sm" animate glow />
                 <span>Para casais que se escolhem todo dia</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight">
-                Uma página só de vocês,{" "}
-                <span className="text-gradient-wine">para sempre</span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight">
+                Um presente que celebra o seu amor{" "}
+                <span className="text-gradient-primary">para sempre</span>
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Crie uma página romântica com contador de tempo juntos e 
-                sugestões de atividades para fazer a dois. O presente digital 
-                perfeito para o seu amor.
+              <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+                Crie uma página inesquecível com contador de tempo e atividades 
+                para viver juntos eternamente.
               </p>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <Button 
-                variant="hero" 
-                size="xl" 
-                onClick={() => navigate("/criar")}
-                className="group"
-              >
-                Criar minha página
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                variant="hero-outline" 
-                size="xl"
-                onClick={() => navigate("/p/demo")}
-              >
-                Ver exemplo
-              </Button>
-            </motion.div>
-
-            {/* Mini demo counter */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-8"
-            >
-              <div className="inline-block p-6 md:p-8 rounded-2xl bg-card border border-border shadow-elevated">
-                <Counter startDate={demoDate} showNextMilestone={false} />
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                <Button 
+                  variant="neon" 
+                  size="xl" 
+                  onClick={() => navigate("/criar")}
+                  className="group w-full sm:w-auto"
+                >
+                  Criar minha página agora
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button 
+                  variant="glass" 
+                  size="xl"
+                  onClick={() => navigate("/p/demo")}
+                  className="w-full sm:w-auto"
+                >
+                  Ver exemplo
+                </Button>
               </div>
+            </motion.div>
+
+            {/* Phone mockup with demo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="flex justify-center lg:justify-end"
+            >
+              <PhoneMockup />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="como-funciona" className="py-16 md:py-24 bg-card/50">
+      {/* How it works - Visual cards */}
+      <section id="como-funciona" className="py-16 md:py-24 bg-gradient-dark-section">
         <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-              Como funciona
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Em poucos minutos você cria a página do casal e já pode compartilhar
-            </p>
-          </motion.div>
+          <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+            {/* Title column */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-1 space-y-4"
+            >
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground leading-tight">
+                Como<br />fazer?
+              </h2>
+              <HeartInfinity size="lg" glow className="hidden lg:block mt-4" />
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-            {steps.map((step, index) => (
+            {/* Steps grid */}
+            <div className="lg:col-span-4 grid md:grid-cols-2 gap-4 md:gap-6">
+              {/* Step 1 - Preencha os dados */}
               <motion.div
-                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-                className="text-center space-y-4"
+                transition={{ delay: 0.1 }}
+                className="step-card group"
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-soft">
-                  {step.icon}
-                </div>
-                <div className="relative">
-                  <span className="absolute -top-8 -left-2 text-6xl font-serif font-bold text-primary/10">
-                    {index + 1}
-                  </span>
-                  <h3 className="text-xl font-serif font-semibold text-foreground relative">
-                    {step.title}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-primary-foreground">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display font-bold text-foreground">
+                    1. Preencha os dados
                   </h3>
                 </div>
-                <p className="text-muted-foreground">{step.description}</p>
+                {/* Mini form preview */}
+                <div className="bg-background/50 rounded-xl p-4 space-y-3">
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-8 rounded-lg bg-card border border-border flex items-center px-3">
+                      <span className="text-xs text-muted-foreground">André e Carol</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-8 rounded-lg bg-card border border-border flex items-center px-3">
+                      <span className="text-xs text-muted-foreground">dd/mm/aaaa</span>
+                    </div>
+                    <div className="w-20 h-8 rounded-lg bg-card border border-border flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground">--:--</span>
+                    </div>
+                  </div>
+                  <div className="h-16 rounded-lg bg-card border border-border flex items-start p-3">
+                    <span className="text-xs text-muted-foreground">Escreva sua mensagem aqui. Capricha hein! 💕</span>
+                  </div>
+                </div>
               </motion.div>
-            ))}
+
+              {/* Step 2 - Faça o pagamento */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="step-card group"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-gold flex items-center justify-center text-gold-foreground">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display font-bold text-foreground">
+                    2. Faça o pagamento
+                  </h3>
+                </div>
+                {/* Payment visual */}
+                <div className="flex items-center justify-center py-8">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-gradient-gold flex items-center justify-center shadow-glow">
+                      <span className="text-2xl">💰</span>
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold">
+                      ✓
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Pagamento único e seguro via Stripe
+                </p>
+              </motion.div>
+
+              {/* Step 3 - Receba o site + QR Code */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="step-card group"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center text-primary-foreground">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display font-bold text-foreground">
+                    3. Receba o seu site + QR Code no e-mail
+                  </h3>
+                </div>
+                {/* Email visual */}
+                <div className="flex items-center justify-center py-6">
+                  <div className="relative">
+                    {/* Phone with notification */}
+                    <div className="w-24 h-40 rounded-2xl bg-card border-2 border-border shadow-elevated overflow-hidden">
+                      <div className="h-6 bg-background flex items-center justify-center">
+                        <div className="w-12 h-1.5 rounded-full bg-border" />
+                      </div>
+                      <div className="p-2">
+                        <div className="bg-primary/20 rounded-lg p-2 flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-rose flex items-center justify-center text-xs">📧</div>
+                          <div className="flex-1">
+                            <p className="text-[8px] font-medium text-foreground">Seu site está pronto!</p>
+                            <p className="text-[6px] text-muted-foreground">Agora mesmo</p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* QR Code mock */}
+                      <div className="flex justify-center mt-2">
+                        <div className="w-12 h-12 bg-background rounded-lg border border-border grid grid-cols-3 gap-0.5 p-1">
+                          {[...Array(9)].map((_, i) => (
+                            <div key={i} className={`rounded-sm ${i % 2 === 0 ? 'bg-foreground' : 'bg-transparent'}`} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Floating hearts */}
+                    <motion.div
+                      className="absolute -right-4 -top-2"
+                      animate={{ y: [-5, 5, -5], rotate: [0, 10, 0] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    >
+                      <span className="text-2xl">💕</span>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Step 4 - Surpreenda seu amor */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+                className="step-card group"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-romantic flex items-center justify-center text-primary-foreground">
+                    <PartyPopper className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-display font-bold text-foreground">
+                    4. Surpreenda seu amor
+                  </h3>
+                </div>
+                {/* Final result preview */}
+                <div className="flex items-center justify-center py-4">
+                  <div className="relative">
+                    {/* Phone with couple page */}
+                    <div className="w-24 h-40 rounded-2xl bg-gradient-primary border-2 border-primary/50 shadow-neon overflow-hidden">
+                      <div className="h-full flex flex-col items-center justify-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-background/30 flex items-center justify-center mb-2">
+                          <span className="text-lg">💑</span>
+                        </div>
+                        <p className="text-[8px] text-primary-foreground font-bold text-center">Ana & João</p>
+                        <p className="text-[10px] text-primary-foreground/80 font-bold mt-1">847 dias</p>
+                        <p className="text-[6px] text-primary-foreground/60">2 anos, 3 meses</p>
+                      </div>
+                    </div>
+                    {/* Floating hearts */}
+                    <motion.div
+                      className="absolute -left-3 top-4"
+                      animate={{ y: [-5, 5, -5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <span className="text-xl">💖</span>
+                    </motion.div>
+                    <motion.div
+                      className="absolute -right-3 bottom-8"
+                      animate={{ y: [5, -5, 5] }}
+                      transition={{ duration: 2.5, repeat: Infinity }}
+                    >
+                      <span className="text-lg">💕</span>
+                    </motion.div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Um presente único e emocionante!
+                </p>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -260,7 +409,7 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-12 md:mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
               Escolha seu plano
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
@@ -281,7 +430,7 @@ const Index = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-24 bg-card/50">
+      <section id="depoimentos" className="py-16 md:py-24 bg-gradient-dark-section">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -289,11 +438,11 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-              Casais que se escolhem
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              Casais que eternizaram seu amor
             </h2>
             <p className="text-muted-foreground">
-              Veja o que os casais estão dizendo sobre o ForeverUs
+              Veja o que estão dizendo sobre o ForeverUs
             </p>
           </motion.div>
 
@@ -309,19 +458,44 @@ const Index = () => {
       <FAQ />
 
       {/* Final CTA */}
-      <section className="py-16 md:py-24 bg-gradient-wine text-primary-foreground">
-        <div className="container">
+      <section className="py-16 md:py-24 bg-gradient-cta relative overflow-hidden">
+        {/* Floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-2xl"
+              style={{
+                left: `${10 + i * 12}%`,
+                top: `${20 + (i % 3) * 30}%`,
+              }}
+              animate={{
+                y: [-10, 10, -10],
+                rotate: [-5, 5, -5],
+              }}
+              transition={{
+                duration: 3 + i * 0.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              {i % 2 === 0 ? "💖" : "✨"}
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="container relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="max-w-2xl mx-auto text-center space-y-6"
           >
-            <HeartInfinity size="xl" className="mx-auto opacity-80" />
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold">
-              Comece a se escolher todo dia
+            <HeartInfinity size="xl" className="mx-auto" glow />
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">
+              Comece a eternizar a sua história hoje
             </h2>
-            <p className="text-primary-foreground/80">
+            <p className="text-primary-foreground/80 text-lg">
               Crie a página do seu casal agora e surpreenda quem você ama 
               com um presente que dura para sempre.
             </p>

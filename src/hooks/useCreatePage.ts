@@ -10,7 +10,7 @@ interface PageData {
   message: string;
   startDate: Date;
   plan: string;
-  photoFile?: File;
+  photoFiles?: File[];
 }
 
 function generateSlug(name1: string, name2?: string): string {
@@ -37,33 +37,35 @@ export function useCreatePage() {
     setIsLoading(true);
 
     try {
-      let photoUrl: string | null = null;
+      const photoUrls: string[] = [];
 
-      // Upload photo if provided
-      if (data.photoFile) {
-        const fileExt = data.photoFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Upload photos if provided
+      if (data.photoFiles && data.photoFiles.length > 0) {
+        for (const file of data.photoFiles) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("couple-photos")
-          .upload(fileName, data.photoFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("couple-photos")
+            .upload(fileName, file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
 
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          toast.error("Erro ao enviar foto. Tente novamente.");
-          setIsLoading(false);
-          return null;
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            toast.error("Erro ao enviar foto. Tente novamente.");
+            setIsLoading(false);
+            return null;
+          }
+
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from("couple-photos")
+            .getPublicUrl(uploadData.path);
+
+          photoUrls.push(urlData.publicUrl);
         }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("couple-photos")
-          .getPublicUrl(uploadData.path);
-
-        photoUrl = urlData.publicUrl;
       }
 
       // Generate unique slug
@@ -80,7 +82,8 @@ export function useCreatePage() {
           occasion: data.occasion || null,
           message: data.message,
           start_date: data.startDate.toISOString().split("T")[0],
-          photo_url: photoUrl,
+          photo_url: photoUrls[0] || null, // Primeira foto como principal
+          photos: photoUrls.length > 0 ? photoUrls : null, // Array completo
           plan: data.plan,
         })
         .select("slug")

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,6 +43,11 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+interface PhotoSlot {
+  preview: string;
+  file: File;
+}
+
 const plans = [
   {
     id: "9_90" as const,
@@ -67,8 +72,7 @@ const plans = [
 
 const Criar = () => {
   const navigate = useNavigate();
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photos, setPhotos] = useState<PhotoSlot[]>([]);
   const { createPage, isLoading } = useCreatePage();
 
   const {
@@ -91,20 +95,34 @@ const Criar = () => {
   const selectedPlan = watch("plan");
   const startDate = watch("startDate");
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const currentPlanLimits = PLAN_LIMITS[selectedPlan as PlanId];
+  const maxPhotos = currentPlanLimits?.maxPhotos || 1;
+
+  // Limpar fotos extras ao mudar de plano
+  useEffect(() => {
+    if (photos.length > maxPhotos) {
+      setPhotos(prev => prev.slice(0, maxPhotos));
+      toast.info(`Mantendo apenas ${maxPhotos} foto${maxPhotos > 1 ? 's' : ''} para este plano`);
+    }
+  }, [selectedPlan, maxPhotos, photos.length]);
+
+  const handlePhotoUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Imagem muito grande. Máximo 5MB.");
-        return;
-      }
-      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+        setPhotos(prev => {
+          const updated = [...prev];
+          updated[index] = { preview: reader.result as string, file };
+          return updated;
+        });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data: FormData) => {
@@ -118,7 +136,7 @@ const Criar = () => {
       message: data.message,
       startDate: data.startDate,
       plan: data.plan,
-      photoFile: photoFile || undefined,
+      photoFiles: photos.map(p => p.file),
     });
 
     toast.dismiss();
@@ -190,48 +208,98 @@ const Criar = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Photo Upload - Mobile optimized */}
+            {/* Photo Upload - Dynamic based on plan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="space-y-3"
             >
-              <Label className="text-sm font-medium">Foto do casal</Label>
-              <label
-                htmlFor="photo"
-                className={cn(
-                  "relative w-full aspect-video max-w-xs mx-auto rounded-2xl cursor-pointer overflow-hidden transition-all flex",
-                  "border-2 border-dashed border-border hover:border-primary active:scale-[0.98]",
-                  "items-center justify-center bg-card",
-                  photoPreview && "border-solid border-primary"
-                )}
-              >
-                {photoPreview ? (
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-center p-6">
-                    <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">
-                      Toque para enviar
-                    </span>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      JPG, PNG ou WEBP (máx 5MB)
-                    </p>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  id="photo"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handlePhotoUpload}
-                />
-              </label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">
+                  {maxPhotos > 1 ? "Fotos do casal" : "Foto do casal"}
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {photos.length}/{maxPhotos} foto{maxPhotos > 1 ? 's' : ''}
+                </span>
+              </div>
+              
+              {maxPhotos > 1 && (
+                <p className="text-xs text-primary">
+                  ✨ No {currentPlanLimits.name} você pode adicionar até {maxPhotos} fotos
+                </p>
+              )}
+              
+              <div className={cn(
+                "grid gap-3",
+                maxPhotos === 1 ? "grid-cols-1 max-w-xs mx-auto" : "grid-cols-3"
+              )}>
+                <AnimatePresence mode="popLayout">
+                  {Array.from({ length: maxPhotos }).map((_, index) => {
+                    const photo = photos[index];
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <label
+                          htmlFor={`photo-${index}`}
+                          className={cn(
+                            "relative w-full aspect-square rounded-2xl cursor-pointer overflow-hidden transition-all flex",
+                            "border-2 border-dashed border-border hover:border-primary active:scale-[0.98]",
+                            "items-center justify-center bg-card",
+                            photo && "border-solid border-primary"
+                          )}
+                        >
+                          {photo ? (
+                            <>
+                              <img
+                                src={photo.preview}
+                                alt={`Foto ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleRemovePhoto(index);
+                                }}
+                                className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground shadow-lg hover:bg-destructive/90 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="text-center p-4">
+                              <Upload className={cn(
+                                "mx-auto text-muted-foreground mb-1",
+                                maxPhotos === 1 ? "w-10 h-10" : "w-6 h-6"
+                              )} />
+                              <span className={cn(
+                                "text-muted-foreground",
+                                maxPhotos === 1 ? "text-sm" : "text-xs"
+                              )}>
+                                {maxPhotos === 1 ? "Toque para enviar" : `Foto ${index + 1}`}
+                              </span>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            id={`photo-${index}`}
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handlePhotoUpload(index, e)}
+                          />
+                        </label>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
             </motion.div>
 
             {/* Names - Stacked on mobile */}

@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePageData } from "@/hooks/usePageData";
-
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -72,6 +72,18 @@ const CouplePage = () => {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSurprise, setShowSurprise] = useState(false);
 
+  // Plan limits hook - use page data once loaded
+  const { 
+    limits, 
+    canDoActivity, 
+    canRegenerate, 
+    canFavorite,
+    incrementActivity, 
+    incrementRegenerate,
+    remainingActivities,
+    remainingRegenerates 
+  } = usePlanLimits(page?.plan || "9_90", page?.id || "temp");
+
   // Use activities from database or fallback
   const activitiesLibrary = activities.length > 0 ? activities : fallbackActivities;
   const currentActivity = activitiesLibrary[currentActivityIndex] || activitiesLibrary[0];
@@ -127,13 +139,29 @@ const CouplePage = () => {
   const seconds = differenceInSeconds(now, startDate) % 60;
 
   const handleRefresh = () => {
+    if (!canRegenerate) {
+      toast.error("Limite de trocas atingido!", {
+        description: `Você pode trocar ${limits.regeneratesPerDay === Infinity ? "∞" : limits.regeneratesPerDay}x por dia no seu plano.`,
+      });
+      return;
+    }
+    incrementRegenerate();
     const nextIndex = (currentActivityIndex + 1) % activitiesLibrary.length;
     setCurrentActivityIndex(nextIndex);
-    toast.success("Nova sugestão gerada!");
+    toast.success("Nova sugestão gerada!", {
+      description: remainingRegenerates > 1 ? `${remainingRegenerates - 1} trocas restantes hoje` : undefined,
+    });
   };
 
   const handleComplete = () => {
+    if (!canDoActivity) {
+      toast.error("Limite de atividades atingido!", {
+        description: `Você pode completar ${limits.activitiesPerDay === Infinity ? "∞" : limits.activitiesPerDay} atividade(s) por dia no seu plano.`,
+      });
+      return;
+    }
     if (!completedActivities.includes(currentActivity.id)) {
+      incrementActivity();
       setCompletedActivities([...completedActivities, currentActivity.id]);
       setShowConfetti(true);
       toast.success("Atividade marcada como feita!", {
@@ -148,6 +176,12 @@ const CouplePage = () => {
       setFavorites(favorites.filter(id => id !== currentActivity.id));
       toast.info("Removido dos favoritos");
     } else {
+      if (!canFavorite(favorites.length)) {
+        toast.error("Limite de favoritos atingido!", {
+          description: `Seu plano permite até ${limits.favoritesLimit} favorito(s).`,
+        });
+        return;
+      }
       setFavorites([...favorites, currentActivity.id]);
       toast.success("Adicionado aos favoritos!");
     }
@@ -413,10 +447,19 @@ const CouplePage = () => {
                 size="lg"
                 className="flex-1"
                 onClick={handleComplete}
-                disabled={isCompleted}
+                disabled={isCompleted || !canDoActivity}
               >
-                <Check className="w-5 h-5 mr-2" />
-                {isCompleted ? "Feito! ✓" : "Marcar como feito"}
+                {!canDoActivity && !isCompleted ? (
+                  <>
+                    <Lock className="w-5 h-5 mr-2" />
+                    Limite atingido
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    {isCompleted ? "Feito! ✓" : "Marcar como feito"}
+                  </>
+                )}
               </Button>
               
               <Button
@@ -424,8 +467,14 @@ const CouplePage = () => {
                 size="icon"
                 className="h-12 w-12"
                 onClick={handleFavorite}
+                disabled={limits.favoritesLimit === 0}
+                title={limits.favoritesLimit === 0 ? "Upgrade para usar favoritos" : undefined}
               >
-                <Heart className={`w-5 h-5 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`} />
+                {limits.favoritesLimit === 0 ? (
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <Heart className={`w-5 h-5 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`} />
+                )}
               </Button>
 
               <Button
@@ -433,11 +482,28 @@ const CouplePage = () => {
                 size="icon"
                 className="h-12 w-12"
                 onClick={handleRefresh}
-                title="Outra sugestão"
+                disabled={!canRegenerate}
+                title={!canRegenerate ? "Limite de trocas atingido" : "Outra sugestão"}
               >
-                <RefreshCw className="w-5 h-5" />
+                {!canRegenerate ? (
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <RefreshCw className="w-5 h-5" />
+                )}
               </Button>
             </div>
+
+            {/* Plan status */}
+            {(limits.activitiesPerDay !== Infinity || limits.regeneratesPerDay !== Infinity) && (
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+                {limits.activitiesPerDay !== Infinity && (
+                  <span>{remainingActivities}/{limits.activitiesPerDay} atividades</span>
+                )}
+                {limits.regeneratesPerDay !== Infinity && (
+                  <span>{remainingRegenerates}/{limits.regeneratesPerDay} trocas</span>
+                )}
+              </div>
+            )}
           </motion.div>
 
           {/* Completed counter */}
@@ -454,7 +520,7 @@ const CouplePage = () => {
           )}
 
           {/* Favorites list */}
-          {favorites.length > 0 && (
+          {limits.favoritesLimit > 0 && favorites.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -462,7 +528,7 @@ const CouplePage = () => {
             >
               <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-rose-500" />
-                Favoritas
+                Favoritas ({favorites.length}/{limits.favoritesLimit === Infinity ? "∞" : limits.favoritesLimit})
               </h4>
               <div className="space-y-2">
                 {favorites.map(id => {
@@ -476,6 +542,20 @@ const CouplePage = () => {
                   );
                 })}
               </div>
+            </motion.div>
+          )}
+
+          {/* Upgrade hint for basic plans */}
+          {limits.favoritesLimit === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl bg-muted/50 border border-border/50 p-4 text-center"
+            >
+              <Lock className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Favoritos e histórico disponíveis nos planos Interativo e Premium
+              </p>
             </motion.div>
           )}
 

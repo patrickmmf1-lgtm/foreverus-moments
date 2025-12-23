@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon, Upload, Heart, Users, PawPrint, ArrowRight, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Upload, Heart, Users, PawPrint, ArrowRight, Check, X } from "lucide-react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCreatePage } from "@/hooks/useCreatePage";
+import { PLAN_LIMITS, PlanId } from "@/lib/planLimits";
 
 const formSchema = z.object({
   type: z.enum(["couple", "friends", "pet"]),
@@ -367,60 +368,84 @@ const Criar = () => {
             >
               <Label className="text-base font-medium">Escolha seu plano</Label>
               <div className="grid gap-3">
-                {plans.map((plan) => (
-                  <label
-                    key={plan.id}
-                    className={cn(
-                      "relative flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all",
-                      "border-2",
-                      selectedPlan === plan.id
-                        ? plan.highlighted
-                          ? "border-gold bg-gold-light shadow-card"
-                          : "border-primary bg-primary-light shadow-card"
-                        : "border-border bg-card hover:border-primary/50"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      value={plan.id}
-                      className="hidden"
-                      {...register("plan")}
-                    />
-                    
-                    {/* Radio indicator */}
-                    <div className={cn(
-                      "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
-                      selectedPlan === plan.id
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground"
-                    )}>
-                      {selectedPlan === plan.id && (
-                        <Check className="w-3 h-3 text-primary-foreground" />
+                {plans.map((plan) => {
+                  const planLimits = PLAN_LIMITS[plan.id as PlanId];
+                  return (
+                    <label
+                      key={plan.id}
+                      className={cn(
+                        "relative flex flex-col gap-3 p-4 rounded-xl cursor-pointer transition-all",
+                        "border-2",
+                        selectedPlan === plan.id
+                          ? plan.highlighted
+                            ? "border-gold bg-gold-light shadow-card"
+                            : "border-primary bg-primary-light shadow-card"
+                          : "border-border bg-card hover:border-primary/50"
                       )}
-                    </div>
+                    >
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="radio"
+                          value={plan.id}
+                          className="hidden"
+                          {...register("plan")}
+                        />
+                        
+                        {/* Radio indicator */}
+                        <div className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                          selectedPlan === plan.id
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground"
+                        )}>
+                          {selectedPlan === plan.id && (
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          )}
+                        </div>
 
-                    {/* Plan info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">{plan.name}</span>
-                        {plan.highlighted && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-gold text-gold-foreground font-medium">
-                            Mais escolhido
+                        {/* Plan info */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{plan.name}</span>
+                            {plan.highlighted && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-gold text-gold-foreground font-medium">
+                                Mais escolhido
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{plan.description}</p>
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground">R$</span>
+                          <span className="text-2xl font-serif font-bold text-foreground">
+                            {plan.price}
                           </span>
-                        )}
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{plan.description}</p>
-                    </div>
 
-                    {/* Price */}
-                    <div className="text-right">
-                      <span className="text-xs text-muted-foreground">R$</span>
-                      <span className="text-2xl font-serif font-bold text-foreground">
-                        {plan.price}
-                      </span>
-                    </div>
-                  </label>
-                ))}
+                      {/* Features list */}
+                      {selectedPlan === plan.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="pt-3 border-t border-border/50"
+                        >
+                          <ul className="grid grid-cols-2 gap-2">
+                            {planLimits.features.map((feature, idx) => (
+                              <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Check className="w-3 h-3 text-primary flex-shrink-0" />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
             </motion.div>
 

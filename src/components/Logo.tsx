@@ -5,6 +5,7 @@ interface LogoProps {
   className?: string;
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
+  variant?: "default" | "light";
 }
 
 const textSizes = {
@@ -19,17 +20,23 @@ const iconSizes = {
   lg: "lg" as const,
 };
 
-export const Logo = ({ className, showIcon = true, size = "md" }: LogoProps) => {
+export const Logo = ({ 
+  className, 
+  showIcon = true, 
+  size = "md",
+  variant = "default" 
+}: LogoProps) => {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {showIcon && (
-        <HeartInfinity size={iconSizes[size]} animate={false} />
+        <HeartInfinity size={iconSizes[size]} animate={false} glow />
       )}
       <span className={cn(
-        "font-serif font-semibold tracking-tight text-foreground",
+        "font-display font-bold tracking-tight",
+        variant === "default" ? "text-foreground" : "text-white",
         textSizes[size]
       )}>
-        Forever<span className="text-primary">Us</span>
+        Forever<span className="text-gradient-primary">Us</span>
       </span>
     </div>
   );

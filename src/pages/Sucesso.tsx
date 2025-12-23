@@ -86,7 +86,7 @@ const Sucesso = () => {
               </div>
 
               <Button
-                variant="wine"
+                variant="neon"
                 size="lg"
                 className="w-full"
                 onClick={handleCopyLink}

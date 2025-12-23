@@ -158,7 +158,7 @@ export const ActivityCard = ({
         {/* Actions */}
         <div className="flex items-center gap-2 pt-2">
           <Button
-            variant={isCompleted ? "wine" : "activity"}
+            variant={isCompleted ? "default" : "activity"}
             size="sm"
             className="flex-1"
             onClick={handleComplete}

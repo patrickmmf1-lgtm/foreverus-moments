@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX } from "lucide-react";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { usePageData } from "@/hooks/usePageData";
 
-// Demo activities library
-const activitiesLibrary = [
+// Fallback activities if none in database
+const fallbackActivities = [
   {
     id: "1",
     title: "Carta do coração",
@@ -15,6 +16,7 @@ const activitiesLibrary = [
     category: "conversa",
     emoji: "💬",
     duration: 15,
+    type: "couple",
   },
   {
     id: "2",
@@ -23,68 +25,18 @@ const activitiesLibrary = [
     category: "diversão",
     emoji: "💃",
     duration: 10,
+    type: "couple",
   },
   {
     id: "3",
-    title: "Café da manhã surpresa",
-    prompt: "Um de vocês prepara um café da manhã especial para o outro amanhã. Capriche nos detalhes!",
-    category: "surpresa",
-    emoji: "🎁",
-    duration: 30,
-  },
-  {
-    id: "4",
     title: "Massagem relaxante",
     prompt: "Façam uma massagem de 10 minutos um no outro. Comecem pelos ombros e costas.",
     category: "carinho",
     emoji: "💆",
     duration: 20,
-  },
-  {
-    id: "5",
-    title: "Memórias fotográficas",
-    prompt: "Olhem juntos fotos antigas do início do relacionamento e contem histórias sobre cada momento.",
-    category: "conversa",
-    emoji: "📸",
-    duration: 15,
-  },
-  {
-    id: "6",
-    title: "Cozinhem juntos",
-    prompt: "Escolham uma receita nova e cozinhem juntos. O resultado não importa, a diversão sim!",
-    category: "encontro",
-    emoji: "👩‍🍳",
-    duration: 45,
-  },
-  {
-    id: "7",
-    title: "20 perguntas",
-    prompt: "Façam 20 perguntas um ao outro que ainda não fizeram. Podem ser bobas ou profundas!",
-    category: "conversa",
-    emoji: "❓",
-    duration: 20,
-  },
-  {
-    id: "8",
-    title: "Passeio sem rumo",
-    prompt: "Saiam para caminhar sem destino definido. Conversem e descubram lugares novos juntos.",
-    category: "encontro",
-    emoji: "🚶",
-    duration: 30,
+    type: "couple",
   },
 ];
-
-// Demo page data
-const demoPage = {
-  title: "Ana & João",
-  name1: "Ana",
-  name2: "João",
-  occasion: "Nossa História de Amor",
-  message: "Você é meu melhor amigo, meu amor e minha pessoa favorita no mundo. Cada dia ao seu lado é uma aventura que eu escolho viver. Te amo infinitamente! 💕",
-  startDate: new Date("2022-06-15"),
-  plan: "29_90" as const,
-  photoUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80",
-};
 
 // Time unit card component
 const TimeCard = ({ value, label }: { value: number; label: string }) => (
@@ -104,15 +56,25 @@ const TimeCard = ({ value, label }: { value: number; label: string }) => (
   </motion.div>
 );
 
+// Default placeholder image
+const defaultPhotoUrl = "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80";
+
 const CouplePage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { page, activities, isLoading, error } = usePageData(slug);
+  
   const [now, setNow] = useState(new Date());
-  const [currentActivity, setCurrentActivity] = useState(activitiesLibrary[0]);
+  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSurprise, setShowSurprise] = useState(false);
+
+  // Use activities from database or fallback
+  const activitiesLibrary = activities.length > 0 ? activities : fallbackActivities;
+  const currentActivity = activitiesLibrary[currentActivityIndex] || activitiesLibrary[0];
 
   // Update clock every second
   useEffect(() => {
@@ -120,19 +82,53 @@ const CouplePage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Carregando sua página...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !page) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto px-6">
+          <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
+            <Heart className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-serif font-bold text-foreground">
+            Página não encontrada
+          </h1>
+          <p className="text-muted-foreground">
+            Esta página não existe ou foi desativada.
+          </p>
+          <Button variant="neon" onClick={() => navigate("/criar")}>
+            Criar minha página
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Calculate time differences
-  const years = differenceInYears(now, demoPage.startDate);
-  const months = differenceInMonths(now, demoPage.startDate) % 12;
-  const totalDays = differenceInDays(now, demoPage.startDate);
+  const startDate = new Date(page.start_date);
+  const years = differenceInYears(now, startDate);
+  const months = differenceInMonths(now, startDate) % 12;
+  const totalDays = differenceInDays(now, startDate);
   const days = Math.floor((totalDays % 365) % 30);
-  const hours = differenceInHours(now, demoPage.startDate) % 24;
-  const minutes = differenceInMinutes(now, demoPage.startDate) % 60;
-  const seconds = differenceInSeconds(now, demoPage.startDate) % 60;
+  const hours = differenceInHours(now, startDate) % 24;
+  const minutes = differenceInMinutes(now, startDate) % 60;
+  const seconds = differenceInSeconds(now, startDate) % 60;
 
   const handleRefresh = () => {
-    const availableActivities = activitiesLibrary.filter(a => a.id !== currentActivity.id);
-    const randomIndex = Math.floor(Math.random() * availableActivities.length);
-    setCurrentActivity(availableActivities[randomIndex]);
+    const nextIndex = (currentActivityIndex + 1) % activitiesLibrary.length;
+    setCurrentActivityIndex(nextIndex);
     toast.success("Nova sugestão gerada!");
   };
 
@@ -159,10 +155,14 @@ const CouplePage = () => {
 
   const handleShare = async () => {
     const shareUrl = window.location.href;
+    const title = page.name2 
+      ? `${page.name1} & ${page.name2}` 
+      : page.name1;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: demoPage.title,
+          title,
           text: `Veja nossa página do casal no ForeverUs!`,
           url: shareUrl,
         });
@@ -179,7 +179,8 @@ const CouplePage = () => {
     setShowSurprise(true);
     setShowConfetti(true);
     toast.success("🎁 Surpresa aberta!", {
-      description: demoPage.message,
+      description: page.message,
+      duration: 8000,
     });
     setTimeout(() => setShowConfetti(false), 3000);
   };
@@ -190,6 +191,11 @@ const CouplePage = () => {
 
   const isCompleted = completedActivities.includes(currentActivity.id);
   const isFavorited = favorites.includes(currentActivity.id);
+
+  // Display names
+  const displayTitle = page.name2 
+    ? `${page.name1} & ${page.name2}` 
+    : page.name1;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -228,8 +234,8 @@ const CouplePage = () => {
         {/* Background Photo */}
         <div className="absolute inset-0">
           <img
-            src={demoPage.photoUrl}
-            alt="Foto do casal"
+            src={page.photo_url || defaultPhotoUrl}
+            alt="Foto"
             className="w-full h-full object-cover"
           />
           {/* Subtle dark overlay */}
@@ -267,16 +273,18 @@ const CouplePage = () => {
         {/* Content overlay - centered at bottom */}
         <div className="absolute inset-0 flex flex-col justify-end pb-8 px-6">
           {/* Occasion/Event title */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-center text-white/80 text-sm md:text-base mb-2"
-          >
-            {demoPage.occasion}
-          </motion.p>
+          {page.occasion && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-center text-white/80 text-sm md:text-base mb-2"
+            >
+              {page.occasion}
+            </motion.p>
+          )}
 
-          {/* Couple Names - Script Font */}
+          {/* Names - Script Font */}
           <motion.h1
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -287,7 +295,7 @@ const CouplePage = () => {
               textShadow: '0 2px 20px rgba(0,0,0,0.5)'
             }}
           >
-            {demoPage.name1} & {demoPage.name2}
+            {displayTitle}
           </motion.h1>
 
           {/* TOGETHER FOR label */}
@@ -476,20 +484,31 @@ const CouplePage = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-2xl bg-gradient-to-br from-rose-500/10 to-purple-500/10 border border-primary/20 p-6 text-center"
+            className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 text-center"
           >
-            <p className="text-foreground/80 leading-relaxed italic">
-              "{demoPage.message}"
+            <Gift className="w-8 h-8 text-primary mx-auto mb-3" />
+            <h3 className="text-lg font-display font-bold text-foreground mb-2">
+              Mensagem especial
+            </h3>
+            <p className="text-muted-foreground italic leading-relaxed">
+              "{page.message}"
             </p>
-            <p className="text-sm text-muted-foreground mt-3">— {demoPage.name1} para {demoPage.name2}</p>
           </motion.div>
 
-          {/* Footer branding */}
-          <div className="text-center py-6">
+          {/* Branding footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center pt-8 pb-4"
+          >
             <p className="text-xs text-muted-foreground">
-              Feito com 💕 no <span className="text-primary font-medium">ForeverUs</span>
+              Feito com 💕 no{" "}
+              <a href="/" className="text-primary hover:underline">
+                ForeverUs
+              </a>
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
     </div>

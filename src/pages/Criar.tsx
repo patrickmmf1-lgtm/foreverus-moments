@@ -23,17 +23,18 @@ import {
 } from "@/components/ui/popover";
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useCreatePage } from "@/hooks/useCreatePage";
 
 const formSchema = z.object({
   type: z.enum(["couple", "friends", "pet"]),
   name1: z.string().min(1, "Nome obrigatório").max(50, "Máximo 50 caracteres"),
   name2: z.string().max(50, "Máximo 50 caracteres").optional(),
+  occasion: z.string().max(100, "Máximo 100 caracteres").optional(),
   startDate: z.date({ required_error: "Data obrigatória" }),
   message: z.string().min(1, "Mensagem obrigatória").max(300, "Máximo 300 caracteres"),
   plan: z.enum(["9_90", "19_90", "29_90"]),
@@ -65,8 +66,9 @@ const plans = [
 
 const Criar = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const { createPage, isLoading } = useCreatePage();
 
   const {
     register,
@@ -94,6 +96,7 @@ const Criar = () => {
         toast.error("Imagem muito grande. Máximo 5MB.");
         return;
       }
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -102,13 +105,26 @@ const Criar = () => {
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form data:", data);
-    toast.success("Redirecionando para pagamento...");
-    // In production, this would create the page and redirect to Stripe
-    setTimeout(() => {
-      navigate("/sucesso");
-    }, 1500);
+  const onSubmit = async (data: FormData) => {
+    toast.loading("Criando sua página...");
+
+    const slug = await createPage({
+      type: data.type,
+      name1: data.name1,
+      name2: data.name2,
+      occasion: data.occasion,
+      message: data.message,
+      startDate: data.startDate,
+      plan: data.plan,
+      photoFile: photoFile || undefined,
+    });
+
+    toast.dismiss();
+
+    if (slug) {
+      toast.success("Página criada com sucesso!");
+      navigate(`/sucesso?slug=${encodeURIComponent(slug)}`);
+    }
   };
 
   const getTypeLabel = () => {
@@ -256,6 +272,22 @@ const Criar = () => {
               )}
             </motion.div>
 
+            {/* Occasion (optional) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="occasion">Título/Ocasião (opcional)</Label>
+              <Input
+                id="occasion"
+                placeholder="Ex: Nossa História de Amor, Dia dos Namorados"
+                className="input-romantic"
+                {...register("occasion")}
+              />
+            </motion.div>
+
             {/* Start Date */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -307,7 +339,7 @@ const Criar = () => {
               className="space-y-2"
             >
               <div className="flex items-center justify-between">
-                <Label htmlFor="message">Mensagem</Label>
+                <Label htmlFor="message">Mensagem surpresa</Label>
                 <span className={cn(
                   "text-xs",
                   message.length > 280 ? "text-destructive" : "text-muted-foreground"
@@ -317,7 +349,7 @@ const Criar = () => {
               </div>
               <Textarea
                 id="message"
-                placeholder="Escreva uma mensagem especial..."
+                placeholder="Escreva uma mensagem especial que aparecerá quando tocarem em 'Abrir surpresa'..."
                 className="input-romantic min-h-[100px] resize-none"
                 {...register("message")}
               />
@@ -399,8 +431,14 @@ const Criar = () => {
               transition={{ delay: 0.7 }}
               className="pt-4"
             >
-              <Button type="submit" variant="neon" size="xl" className="w-full group">
-                Continuar para pagamento
+              <Button 
+                type="submit" 
+                variant="neon" 
+                size="xl" 
+                className="w-full group"
+                disabled={isLoading}
+              >
+                {isLoading ? "Criando..." : "Criar minha página"}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-4">

@@ -77,6 +77,7 @@ const Criar = () => {
     formState: { errors },
     watch,
     setValue,
+    clearErrors,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -320,7 +321,8 @@ const Criar = () => {
                     selected={startDate}
                     onSelect={(date) => {
                       if (date) {
-                        setValue("startDate", date, { shouldValidate: true });
+                        setValue("startDate", date);
+                        clearErrors("startDate");
                       }
                     }}
                     disabled={(date) => date > new Date()}

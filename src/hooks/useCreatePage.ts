@@ -11,6 +11,12 @@ interface PageData {
   startDate: Date;
   plan: string;
   photoFiles?: File[];
+  customerEmail?: string;
+}
+
+interface CreatePageResult {
+  slug: string;
+  checkoutUrl: string;
 }
 
 function generateSlug(name1: string, name2?: string): string {
@@ -33,7 +39,7 @@ function generateSlug(name1: string, name2?: string): string {
 export function useCreatePage() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const createPage = async (data: PageData): Promise<string | null> => {
+  const createPage = async (data: PageData): Promise<CreatePageResult | null> => {
     setIsLoading(true);
 
     try {
@@ -71,7 +77,7 @@ export function useCreatePage() {
       // Generate unique slug
       const slug = generateSlug(data.name1, data.name2);
 
-      // Insert page into database
+      // Insert page into database with pending_payment status
       const { data: pageData, error: insertError } = await supabase
         .from("pages")
         .insert({
@@ -82,9 +88,10 @@ export function useCreatePage() {
           occasion: data.occasion || null,
           message: data.message,
           start_date: data.startDate.toISOString().split("T")[0],
-          photo_url: photoUrls[0] || null, // Primeira foto como principal
-          photos: photoUrls.length > 0 ? photoUrls : null, // Array completo
+          photo_url: photoUrls[0] || null,
+          photos: photoUrls.length > 0 ? photoUrls : null,
           plan: data.plan,
+          status: 'pending_payment',
         })
         .select("slug")
         .single();
@@ -100,7 +107,36 @@ export function useCreatePage() {
         return null;
       }
 
-      return pageData.slug;
+      // Call create-billing edge function to get checkout URL
+      const { data: billingData, error: billingError } = await supabase.functions.invoke(
+        'create-billing',
+        {
+          body: {
+            slug: pageData.slug,
+            plan: data.plan,
+            customerEmail: data.customerEmail,
+          },
+        }
+      );
+
+      if (billingError) {
+        console.error("Billing error:", billingError);
+        toast.error("Erro ao gerar pagamento. Tente novamente.");
+        setIsLoading(false);
+        return null;
+      }
+
+      if (!billingData?.checkoutUrl) {
+        console.error("No checkout URL returned:", billingData);
+        toast.error("Erro ao gerar link de pagamento.");
+        setIsLoading(false);
+        return null;
+      }
+
+      return {
+        slug: pageData.slug,
+        checkoutUrl: billingData.checkoutUrl,
+      };
     } catch (error) {
       console.error("Create page error:", error);
       toast.error("Erro inesperado. Tente novamente.");

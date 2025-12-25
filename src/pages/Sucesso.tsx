@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Copy, Download, ExternalLink, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { Check, Copy, Download, ExternalLink, Smartphone, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 import Header from "@/components/Header";
@@ -9,16 +9,71 @@ import Footer from "@/components/Footer";
 import HeartInfinity from "@/components/HeartInfinity";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Sucesso = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [copied, setCopied] = useState(false);
+  const [pageStatus, setPageStatus] = useState<'loading' | 'pending_payment' | 'active'>('loading');
+  const [isPolling, setIsPolling] = useState(false);
 
   const slug = searchParams.get("slug") || "demo";
   const baseUrl = window.location.origin;
   const pageLink = `${baseUrl}/p/${slug}`;
-  const isPremium = true;
+
+  // Buscar status da página
+  useEffect(() => {
+    const fetchPageStatus = async () => {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('status, plan')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching page status:', error);
+        setPageStatus('active'); // Fallback para mostrar sucesso
+        return;
+      }
+
+      if (!data) {
+        console.log('Page not found');
+        setPageStatus('active'); // Fallback
+        return;
+      }
+
+      setPageStatus(data.status as 'pending_payment' | 'active');
+    };
+
+    fetchPageStatus();
+  }, [slug]);
+
+  // Polling para atualizar status quando pendente
+  useEffect(() => {
+    if (pageStatus !== 'pending_payment') return;
+
+    setIsPolling(true);
+    const interval = setInterval(async () => {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('status')
+        .eq('slug', slug)
+        .maybeSingle();
+
+      if (!error && data?.status === 'active') {
+        setPageStatus('active');
+        setIsPolling(false);
+        toast.success('Pagamento confirmado!');
+        clearInterval(interval);
+      }
+    }, 3000); // Verificar a cada 3 segundos
+
+    return () => {
+      clearInterval(interval);
+      setIsPolling(false);
+    };
+  }, [pageStatus, slug]);
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(pageLink);
@@ -52,6 +107,86 @@ const Sucesso = () => {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
+  // Estado de carregamento
+  if (pageStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Estado de pagamento pendente
+  if (pageStatus === 'pending_payment') {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <Header variant="minimal" />
+
+        <main className="container py-12 md:py-20">
+          <div className="max-w-lg mx-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-3xl bg-card border border-border shadow-elevated p-8 text-center space-y-8"
+            >
+              {/* Loading Icon */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+                className="w-20 h-20 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center"
+              >
+                <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+              </motion.div>
+
+              {/* Title */}
+              <div className="space-y-2">
+                <h1 className="text-3xl font-serif font-bold text-foreground">
+                  Confirmando pagamento...
+                </h1>
+                <p className="text-muted-foreground">
+                  Aguarde enquanto processamos seu pagamento via Pix. Isso pode levar alguns segundos.
+                </p>
+              </div>
+
+              {/* Heart Infinity */}
+              <HeartInfinity size="lg" className="mx-auto animate-pulse" />
+
+              {/* Info */}
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  {isPolling ? (
+                    <>Verificando automaticamente a cada 3 segundos...</>
+                  ) : (
+                    <>Se o pagamento foi realizado, aguarde a confirmação.</>
+                  )}
+                </p>
+              </div>
+
+              {/* Manual refresh */}
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Verificar manualmente
+              </Button>
+            </motion.div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // Estado de sucesso (pagamento confirmado)
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Header variant="minimal" />
@@ -154,16 +289,14 @@ const Sucesso = () => {
                 Ver minha página
               </Button>
 
-              {isPremium && (
-                <Button
-                  variant="gold"
-                  size="lg"
-                  className="w-full"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  Instalar nosso app
-                </Button>
-              )}
+              <Button
+                variant="gold"
+                size="lg"
+                className="w-full"
+              >
+                <Smartphone className="w-4 h-4" />
+                Instalar nosso app
+              </Button>
             </div>
 
             {/* Email notice */}

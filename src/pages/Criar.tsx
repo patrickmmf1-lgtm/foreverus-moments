@@ -128,7 +128,7 @@ const Criar = () => {
   const onSubmit = async (data: FormData) => {
     toast.loading("Criando sua página...");
 
-    const slug = await createPage({
+    const result = await createPage({
       type: data.type,
       name1: data.name1,
       name2: data.name2,
@@ -141,9 +141,10 @@ const Criar = () => {
 
     toast.dismiss();
 
-    if (slug) {
-      toast.success("Página criada com sucesso!");
-      navigate(`/sucesso?slug=${encodeURIComponent(slug)}`);
+    if (result) {
+      toast.success("Redirecionando para pagamento...");
+      // Redirecionar para checkout da AbacatePay
+      window.location.href = result.checkoutUrl;
     }
   };
 

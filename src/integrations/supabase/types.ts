@@ -91,6 +91,7 @@ export type Database = {
       }
       pages: {
         Row: {
+          billing_id: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
@@ -103,9 +104,11 @@ export type Database = {
           plan: string
           slug: string
           start_date: string
+          status: string
           type: string
         }
         Insert: {
+          billing_id?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -118,9 +121,11 @@ export type Database = {
           plan: string
           slug: string
           start_date: string
+          status?: string
           type?: string
         }
         Update: {
+          billing_id?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
@@ -133,6 +138,7 @@ export type Database = {
           plan?: string
           slug?: string
           start_date?: string
+          status?: string
           type?: string
         }
         Relationships: []

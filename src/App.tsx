@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Criar from "./pages/Criar";
 import CouplePage from "./pages/CouplePage";
 import Sucesso from "./pages/Sucesso";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/criar" element={<Criar />} />
           <Route path="/p/:slug" element={<CouplePage />} />
           <Route path="/sucesso" element={<Sucesso />} />
+          <Route path="/install/:slug" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Flag para modo de teste - mude para false quando for para produção
+const TEST_MODE = true;
+
 interface PageData {
   type: "couple" | "friends" | "pet";
   name1: string;
@@ -77,7 +80,7 @@ export function useCreatePage() {
       // Generate unique slug
       const slug = generateSlug(data.name1, data.name2);
 
-      // Insert page into database with pending_payment status
+      // Insert page into database
       const { data: pageData, error: insertError } = await supabase
         .from("pages")
         .insert({
@@ -91,7 +94,7 @@ export function useCreatePage() {
           photo_url: photoUrls[0] || null,
           photos: photoUrls.length > 0 ? photoUrls : null,
           plan: data.plan,
-          status: 'pending_payment',
+          status: TEST_MODE ? 'active' : 'pending_payment',
         })
         .select("slug")
         .single();
@@ -105,6 +108,14 @@ export function useCreatePage() {
         toast.error("Erro ao criar página. Tente novamente.");
         setIsLoading(false);
         return null;
+      }
+
+      // Em modo de teste, pular o pagamento
+      if (TEST_MODE) {
+        return {
+          slug: pageData.slug,
+          checkoutUrl: `/sucesso?slug=${pageData.slug}`,
+        };
       }
 
       // Call create-billing edge function to get checkout URL

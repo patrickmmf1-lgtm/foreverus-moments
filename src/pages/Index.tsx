@@ -14,10 +14,10 @@ const plans = [
   {
     name: "Presente",
     price: "9,90",
-    description: "Perfeito para presentear",
+    description: "Acesso por 3 meses",
     icon: <Gift className="w-6 h-6" />,
     features: [
-      { text: "Página ativa para sempre", included: true },
+      { text: "Página ativa por 3 meses", included: true },
       { text: "Contador de dias juntos", included: true },
       { text: "1 foto + mensagem", included: true },
       { text: "1 atividade por dia", included: true },
@@ -31,12 +31,12 @@ const plans = [
   {
     name: "Interativo",
     price: "19,90",
-    description: "Para usar todo dia",
+    description: "Acesso por 6 meses",
     icon: <Heart className="w-6 h-6" />,
     badge: "Mais popular",
     badgeType: "popular" as const,
     features: [
-      { text: "Página ativa para sempre", included: true },
+      { text: "Página ativa por 6 meses", included: true },
       { text: "Contador de dias juntos", included: true },
       { text: "1 foto + mensagem", included: true },
       { text: "Até 3 atividades por dia", included: true },
@@ -50,13 +50,13 @@ const plans = [
   {
     name: "Premium",
     price: "29,90",
-    description: "A melhor experiência",
+    description: "Acesso por 12 meses",
     icon: <Sparkles className="w-6 h-6" />,
     highlighted: true,
     badge: "Melhor custo-benefício",
     badgeType: "premium" as const,
     features: [
-      { text: "Página ativa para sempre", included: true },
+      { text: "Página ativa por 12 meses", included: true },
       { text: "Contador de dias juntos", included: true },
       { text: "1 foto + mensagem", included: true },
       { text: "Atividades ilimitadas", included: true },
@@ -159,13 +159,13 @@ const Index = () => {
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight">
-                Um presente que celebra o seu amor{" "}
-                <span className="text-gradient-primary">para sempre</span>
+                Um presente que celebra o amor de vocês.{" "}
+                <span className="text-gradient-primary">Do jeitinho que ele merece.</span>
               </h1>
               
               <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-                Crie uma página inesquecível com contador de tempo e atividades 
-                para viver juntos eternamente.
+                Crie uma página única com contador de tempo, QR Code e atividades 
+                pra vocês curtirem juntos – por quanto tempo quiserem.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -175,7 +175,7 @@ const Index = () => {
                   onClick={() => navigate("/criar")}
                   className="group w-full sm:w-auto"
                 >
-                  Criar minha página agora
+                  Quero criar minha página agora
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button 
@@ -342,6 +342,9 @@ const Index = () => {
                     </motion.div>
                   </div>
                 </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Sua página será entregue e ficará ativa de acordo com o plano escolhido.
+                </p>
               </motion.div>
 
               {/* Step 4 - Surpreenda seu amor */}
@@ -413,7 +416,7 @@ const Index = () => {
               Escolha seu plano
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Pagamento único, página ativa para sempre. Sem assinatura.
+              Pagamento único. Acesso conforme plano escolhido. Sem assinatura.
             </p>
           </motion.div>
 
@@ -439,10 +442,10 @@ const Index = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-              Casais que eternizaram seu amor
+              Casais que celebram seu amor
             </h2>
             <p className="text-muted-foreground">
-              Veja o que estão dizendo sobre o ForeverUs
+              Veja o que estão dizendo sobre o PraSempre
             </p>
           </motion.div>
 
@@ -493,11 +496,11 @@ const Index = () => {
           >
             <HeartInfinity size="xl" className="mx-auto" glow />
             <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground">
-              Comece a eternizar a sua história hoje
+              Comece sua história agora
             </h2>
             <p className="text-primary-foreground/80 text-lg">
-              Crie a página do seu casal agora e surpreenda quem você ama 
-              com um presente que dura para sempre.
+              Crie a página do seu casal e surpreenda quem você ama 
+              com um presente único e emocionante.
             </p>
             <Button
               variant="gold"
@@ -505,7 +508,7 @@ const Index = () => {
               onClick={() => navigate("/criar")}
               className="group"
             >
-              Criar minha página
+              Quero viver essa experiência
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>

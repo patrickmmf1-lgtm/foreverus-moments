@@ -144,7 +144,7 @@ const Index = () => {
           ))}
         </div>
         
-        <div className="container relative">
+        <div className="container relative px-6 md:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             {/* Text content */}
             <motion.div

@@ -81,42 +81,14 @@ const Install = () => {
       setIsLoading(false);
 
       // Injetar manifest dinâmico
-      void injectDynamicManifest(data);
+      injectDynamicManifest(data);
     };
 
     fetchPage();
   }, [slug]);
 
-  async function createPngIconDataUrl(src: string, size: number): Promise<string> {
-    return await new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return resolve(src);
-
-        // center-crop cover
-        const scale = Math.max(size / img.width, size / img.height);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        const x = (size - w) / 2;
-        const y = (size - h) / 2;
-
-        ctx.drawImage(img, x, y, w, h);
-        resolve(canvas.toDataURL("image/png"));
-      };
-
-      img.onerror = () => resolve(src);
-      img.src = src;
-    });
-  }
-
   // Injetar manifest dinâmico para PWA personalizado
-  const injectDynamicManifest = async (pageData: PageData) => {
+  const injectDynamicManifest = (pageData: PageData) => {
     const coupleNames = pageData.name2
       ? `${pageData.name1} & ${pageData.name2}`
       : pageData.name1;
@@ -126,12 +98,6 @@ const Install = () => {
       : pageData.name1.substring(0, 12);
 
     const photoUrl = pageData.photos?.[0] || pageData.photo_url || "/placeholder.svg";
-
-    // Android costuma exigir ícones válidos no manifest; geramos PNGs no tamanho certo.
-    const [icon192, icon512] = await Promise.all([
-      createPngIconDataUrl(photoUrl, 192),
-      createPngIconDataUrl(photoUrl, 512),
-    ]);
 
     const manifest = {
       name: coupleNames,
@@ -143,16 +109,16 @@ const Install = () => {
       theme_color: "#722F37",
       icons: [
         {
-          src: icon192,
+          src: photoUrl,
           sizes: "192x192",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
         },
         {
-          src: icon512,
+          src: photoUrl,
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
         },
       ],
     };
@@ -180,7 +146,7 @@ const Install = () => {
       appleIcon.rel = "apple-touch-icon";
       document.head.appendChild(appleIcon);
     }
-    appleIcon.href = icon192;
+    appleIcon.href = photoUrl;
 
     // Atualizar título
     document.title = `${coupleNames} - ForeverUs`;

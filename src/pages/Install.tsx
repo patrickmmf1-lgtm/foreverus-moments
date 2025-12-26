@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Smartphone, Download, Share2, Crown, Loader2, ArrowLeft, Check } from "lucide-react";
+import { Download, Share2, Crown, Loader2, ArrowLeft, Check, ExternalLink, Copy } from "lucide-react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,6 +9,8 @@ import HeartInfinity from "@/components/HeartInfinity";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlanLimits } from "@/lib/planLimits";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { injectDynamicManifest, removeDynamicManifest } from "@/lib/pwaUtils";
 import { toast } from "sonner";
 
 interface PageData {
@@ -27,26 +29,9 @@ const Install = () => {
   const [page, setPage] = useState<PageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Capturar o evento beforeinstallprompt
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    // Verificar se já está instalado
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-    }
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  const { isInstalled, isIOS, isAndroid, isSafari, promptReady, promptInstall } = usePWAInstall();
 
   // Buscar dados da página
   useEffect(() => {
@@ -81,151 +66,70 @@ const Install = () => {
       setIsLoading(false);
 
       // Injetar manifest dinâmico
-      injectDynamicManifest(data);
+      const coupleNames = data.name2 ? `${data.name1} & ${data.name2}` : data.name1;
+      const shortName = data.name2
+        ? `${data.name1.charAt(0)} & ${data.name2.charAt(0)}`
+        : data.name1.substring(0, 12);
+      const photoUrl = data.photos?.[0] || data.photo_url || "/placeholder.svg";
+
+      injectDynamicManifest({
+        coupleName: coupleNames,
+        shortName,
+        photoUrl,
+        slug: data.slug,
+      });
     };
 
     fetchPage();
+
+    // Cleanup ao sair da página
+    return () => {
+      removeDynamicManifest();
+    };
   }, [slug]);
 
-  // Injetar manifest dinâmico para PWA personalizado
-  const injectDynamicManifest = (pageData: PageData) => {
-    const coupleNames = pageData.name2
-      ? `${pageData.name1} & ${pageData.name2}`
-      : pageData.name1;
-
-    const shortName = pageData.name2
-      ? `${pageData.name1.charAt(0)} & ${pageData.name2.charAt(0)}`
-      : pageData.name1.substring(0, 12);
-
-    const photoUrl = pageData.photos?.[0] || pageData.photo_url || "/placeholder.svg";
-
-    const manifest = {
-      name: coupleNames,
-      short_name: shortName,
-      description: `Página de ${coupleNames} - ForeverUs`,
-      start_url: `/p/${pageData.slug}`,
-      display: "standalone",
-      background_color: "#0D0D0F",
-      theme_color: "#722F37",
-      icons: [
-        {
-          src: photoUrl,
-          sizes: "192x192",
-          type: "image/png",
-          purpose: "any",
-        },
-        {
-          src: photoUrl,
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any",
-        },
-      ],
-    };
-
-    // Remover manifest existente se houver
-    const existingManifest = document.querySelector('link[rel="manifest"]');
-    if (existingManifest) {
-      existingManifest.remove();
-    }
-
-    // Criar blob URL para o manifest
-    const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
-    const manifestUrl = URL.createObjectURL(blob);
-
-    // Adicionar link do manifest
-    const link = document.createElement("link");
-    link.rel = "manifest";
-    link.href = manifestUrl;
-    document.head.appendChild(link);
-
-    // Atualizar apple-touch-icon
-    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
-    if (!appleIcon) {
-      appleIcon = document.createElement("link");
-      appleIcon.rel = "apple-touch-icon";
-      document.head.appendChild(appleIcon);
-    }
-    appleIcon.href = photoUrl;
-
-    // Atualizar título
-    document.title = `${coupleNames} - ForeverUs`;
-  };
-
-  // Detectar se é iOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-  // Instalar PWA
-  const handleInstall = async () => {
-    if (!page) return;
-    
-    const names = page.name2 ? `${page.name1} & ${page.name2}` : page.name1;
-    
-    if (deferredPrompt) {
-      // Android - usar beforeinstallprompt
-      const promptEvent = deferredPrompt as any;
-      promptEvent.prompt();
-      const { outcome } = await promptEvent.userChoice;
-      
-      if (outcome === "accepted") {
-        toast.success("App instalado com sucesso!");
-        setIsInstalled(true);
-      }
-      setDeferredPrompt(null);
-    } else if (isIOS && navigator.share) {
-      // iOS - abrir menu de compartilhamento nativo
-      try {
-        await navigator.share({
-          title: names,
-          text: `Instale o app de ${names}`,
-          url: window.location.href,
-        });
-        toast.info("Use 'Adicionar à Tela de Início' para instalar o app");
-      } catch (err) {
-        // Usuário cancelou
-      }
-    } else {
-      // Fallback - mostrar instrução simples
-      toast.info("Toque no menu do navegador e selecione 'Adicionar à Tela de Início'");
+  // Instalar no Android (1 clique)
+  const handleAndroidInstall = async () => {
+    const success = await promptInstall();
+    if (success) {
+      toast.success("App instalado com sucesso!");
     }
   };
 
-  // Copiar link para compartilhar
+  // Copiar link
+  const handleCopyLink = async () => {
+    const link = window.location.href;
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast.success("Link copiado!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Compartilhar
   const handleShare = async () => {
-    const installLink = `${window.location.origin}/install/${slug}`;
+    const installLink = window.location.href;
+    const names = page?.name2 ? `${page.name1} & ${page.name2}` : page?.name1;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Instalar app de ${page?.name1} ${page?.name2 ? `& ${page.name2}` : ""}`,
+          title: `Instalar app de ${names}`,
           text: "Instale o app para ter acesso rápido à nossa página!",
           url: installLink,
         });
-      } catch (err) {
-        // User cancelled or error
-        await copyToClipboard(installLink);
+      } catch {
+        await handleCopyLink();
       }
     } else {
-      await copyToClipboard(installLink);
+      await handleCopyLink();
     }
-  };
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success("Link copiado!");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   // Loading
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Carregando...</p>
         </motion.div>
@@ -280,9 +184,7 @@ const Install = () => {
               </motion.div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-serif font-bold text-foreground">
-                  Recurso Premium
-                </h1>
+                <h1 className="text-2xl font-serif font-bold text-foreground">Recurso Premium</h1>
                 <p className="text-muted-foreground">
                   A instalação como app está disponível apenas no plano Premium.
                 </p>
@@ -291,20 +193,12 @@ const Install = () => {
               <HeartInfinity size="md" className="mx-auto opacity-50" />
 
               <div className="space-y-3">
-                <Button
-                  variant="gold"
-                  size="lg"
-                  className="w-full"
-                  onClick={() => navigate("/criar")}
-                >
+                <Button variant="gold" size="lg" className="w-full" onClick={() => navigate("/criar")}>
                   <Crown className="w-4 h-4" />
                   Fazer upgrade para Premium
                 </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(`/p/${slug}`)}
-                >
+                <Button variant="outline" onClick={() => navigate(`/p/${slug}`)}>
                   <ArrowLeft className="w-4 h-4" />
                   Voltar para a página
                 </Button>
@@ -316,6 +210,115 @@ const Install = () => {
       </div>
     );
   }
+
+  // Renderizar conteúdo baseado no estado
+  const renderInstallContent = () => {
+    // Já instalado
+    if (isInstalled) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl bg-primary/20 border border-primary/30 p-4 flex items-center justify-center gap-2">
+            <Check className="w-5 h-5 text-primary" />
+            <span className="text-primary font-medium">App já instalado!</span>
+          </div>
+          <Button variant="neon" size="lg" className="w-full" onClick={() => navigate(`/p/${slug}`)}>
+            <ExternalLink className="w-4 h-4" />
+            Abrir App
+          </Button>
+        </div>
+      );
+    }
+
+    // iOS - Não é Safari
+    if (isIOS && !isSafari) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 text-center">
+            <p className="text-amber-200 font-medium mb-2">Abra no Safari para instalar</p>
+            <p className="text-sm text-muted-foreground">
+              No iPhone, apps só podem ser instalados pelo Safari.
+            </p>
+          </div>
+          <Button variant="outline" size="lg" className="w-full" onClick={handleCopyLink}>
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Link copiado!" : "Copiar link"}
+          </Button>
+        </div>
+      );
+    }
+
+    // iOS - Safari
+    if (isIOS && isSafari) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl bg-card border border-border p-4 space-y-4">
+            <p className="text-sm text-muted-foreground text-center mb-2">
+              Siga os passos para instalar:
+            </p>
+
+            {/* Passo 1 */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                1
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">Toque no botão</p>
+                <p className="text-xs text-muted-foreground">Compartilhar</p>
+              </div>
+              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+            </div>
+
+            {/* Passo 2 */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                2
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-foreground">Selecione</p>
+                <p className="text-xs text-muted-foreground">"Adicionar à Tela de Início"</p>
+              </div>
+              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Android/Desktop - Prompt pronto (1 clique!)
+    if (promptReady) {
+      return (
+        <Button variant="neon" size="lg" className="w-full" onClick={handleAndroidInstall}>
+          <Download className="w-4 h-4" />
+          Instalar App
+        </Button>
+      );
+    }
+
+    // Android/Desktop - Prompt não disponível (fallback)
+    return (
+      <div className="space-y-4">
+        <div className="rounded-xl bg-card border border-border p-4 space-y-3">
+          <p className="text-sm text-muted-foreground text-center">
+            Toque no menu do navegador (⋮) e selecione:
+          </p>
+          <p className="text-center font-medium text-foreground">"Adicionar à tela inicial"</p>
+        </div>
+        <Button variant="outline" size="lg" className="w-full" onClick={handleShare}>
+          <Share2 className="w-4 h-4" />
+          Compartilhar link
+        </Button>
+      </div>
+    );
+  };
 
   // Página de instalação para Premium
   return (
@@ -336,76 +339,31 @@ const Install = () => {
               transition={{ type: "spring", delay: 0.2 }}
               className="w-28 h-28 mx-auto rounded-3xl overflow-hidden shadow-elevated border-4 border-primary/30"
             >
-              <img
-                src={photoUrl}
-                alt={coupleNames}
-                className="w-full h-full object-cover"
-              />
+              <img src={photoUrl} alt={coupleNames} className="w-full h-full object-cover" />
             </motion.div>
 
             {/* Título */}
             <div className="space-y-2">
-              <h1 className="text-2xl font-serif font-bold text-foreground">
-                Instalar o app de
-              </h1>
-              <p className="text-xl font-serif text-primary">
-                "{coupleNames}"
-              </p>
+              <h1 className="text-2xl font-serif font-bold text-foreground">Instale o app de</h1>
+              <p className="text-xl font-serif text-primary">"{coupleNames}"</p>
             </div>
 
             {/* Descrição */}
             <p className="text-muted-foreground text-sm">
-              Tenha acesso rápido ao contador e atividades do casal direto na tela inicial do seu celular.
+              Acesse rapidamente direto da tela inicial do seu celular.
             </p>
 
             <HeartInfinity size="md" className="mx-auto" />
 
-            {/* Botões de Ação */}
-            <div className="space-y-3">
-              {isInstalled ? (
-                <div className="rounded-xl bg-primary/20 border border-primary/30 p-4 flex items-center justify-center gap-2">
-                  <Check className="w-5 h-5 text-primary" />
-                  <span className="text-primary font-medium">App já instalado!</span>
-                </div>
-              ) : (
-                <Button
-                  variant="neon"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleInstall}
-                >
-                  <Download className="w-4 h-4" />
-                  Instalar App
-                </Button>
-              )}
+            {/* Conteúdo de instalação baseado no estado */}
+            {renderInstallContent()}
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full"
-                onClick={handleShare}
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Link copiado!
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-4 h-4" />
-                    Compartilhar link para instalar
-                  </>
-                )}
+            {/* Link para voltar */}
+            {!isInstalled && (
+              <Button variant="ghost" onClick={() => navigate(`/p/${slug}`)}>
+                Continuar no navegador
               </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => navigate(`/p/${slug}`)}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar para a página
-              </Button>
-            </div>
+            )}
           </motion.div>
         </div>
       </main>

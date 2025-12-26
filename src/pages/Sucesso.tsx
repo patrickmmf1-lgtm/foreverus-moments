@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Copy, Download, ExternalLink, Smartphone, Loader2 } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, Smartphone, Loader2, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -10,12 +10,15 @@ import HeartInfinity from "@/components/HeartInfinity";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getPlanLimits } from "@/lib/planLimits";
 
 const Sucesso = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [copied, setCopied] = useState(false);
   const [pageStatus, setPageStatus] = useState<'loading' | 'pending_payment' | 'active'>('loading');
+  const [pagePlan, setPagePlan] = useState<string | null>(null);
+  const [pageName, setPageName] = useState<string>("");
   const [isPolling, setIsPolling] = useState(false);
 
   const slug = searchParams.get("slug") || "demo";
@@ -27,7 +30,7 @@ const Sucesso = () => {
     const fetchPageStatus = async () => {
       const { data, error } = await supabase
         .from('pages')
-        .select('status, plan')
+        .select('status, plan, name1, name2')
         .eq('slug', slug)
         .maybeSingle();
 
@@ -44,6 +47,8 @@ const Sucesso = () => {
       }
 
       setPageStatus(data.status as 'pending_payment' | 'active');
+      setPagePlan(data.plan);
+      setPageName(data.name2 ? `${data.name1} & ${data.name2}` : data.name1);
     };
 
     fetchPageStatus();
@@ -289,14 +294,47 @@ const Sucesso = () => {
                 Ver minha página
               </Button>
 
-              <Button
-                variant="gold"
-                size="lg"
-                className="w-full"
-              >
-                <Smartphone className="w-4 h-4" />
-                Instalar nosso app
-              </Button>
+              {/* Botões de PWA - apenas para plano Premium */}
+              {pagePlan && getPlanLimits(pagePlan).hasPWA && (
+                <>
+                  <Button
+                    variant="gold"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => navigate(`/install/${slug}`)}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    Instalar o app da sua página
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full"
+                    onClick={async () => {
+                      const installLink = `${baseUrl}/install/${slug}`;
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({
+                            title: `Instalar app de ${pageName}`,
+                            text: "Instale o app para ter acesso rápido à nossa página!",
+                            url: installLink,
+                          });
+                        } catch {
+                          await navigator.clipboard.writeText(installLink);
+                          toast.success("Link copiado!");
+                        }
+                      } else {
+                        await navigator.clipboard.writeText(installLink);
+                        toast.success("Link copiado!");
+                      }
+                    }}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar link para baixar app
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Email notice */}

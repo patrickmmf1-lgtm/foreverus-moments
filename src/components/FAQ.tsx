@@ -9,11 +9,7 @@ import { motion } from "framer-motion";
 const faqs = [
   {
     question: "Como funciona o pagamento?",
-    answer: "O pagamento é único e seguro. Você paga uma vez e a página do seu casal fica ativa conforme o plano escolhido. Aceitamos cartão de crédito e débito via Stripe. Em breve teremos Pix!",
-  },
-  {
-    question: "Por quanto tempo a página fica disponível?",
-    answer: "O site fica disponível conforme o plano adquirido: Presente (3 meses), Interativo (6 meses) ou Premium (12 meses). Você pode renová-lo sempre que quiser.",
+    answer: "O pagamento é único e vitalício. Você paga uma vez e a página do seu casal fica ativa para sempre. Aceitamos cartão de crédito e débito via Stripe. Em breve teremos Pix!",
   },
   {
     question: "Posso editar a página depois de criar?",
@@ -59,7 +55,7 @@ export const FAQ = () => {
             Perguntas frequentes
           </h2>
           <p className="text-muted-foreground">
-            Tudo o que você precisa saber sobre o PraSempre
+            Tudo o que você precisa saber sobre o ForeverUs
           </p>
         </motion.div>
 

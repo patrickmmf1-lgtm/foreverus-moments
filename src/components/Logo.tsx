@@ -36,7 +36,7 @@ export const Logo = ({
         variant === "default" ? "text-foreground" : "text-white",
         textSizes[size]
       )}>
-        Pra<span className="text-gradient-primary">Sempre</span>
+        Forever<span className="text-gradient-primary">Us</span>
       </span>
     </div>
   );

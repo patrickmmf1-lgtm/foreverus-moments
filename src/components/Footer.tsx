@@ -12,8 +12,8 @@ export const Footer = () => {
           <div className="md:col-span-2 space-y-4">
             <Logo size="md" />
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Crie uma página que celebra a história de vocês com tempo contado, 
-              mas memórias que duram.
+              Crie uma página que eterniza seu amor – contador de tempo + atividades 
+              para vocês fazerem juntos, para sempre.
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Feito com</span>
@@ -103,7 +103,7 @@ export const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-border/30 text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} PraSempre. Todos os direitos reservados.
+            © {new Date().getFullYear()} ForeverUs. Todos os direitos reservados.
           </p>
         </div>
       </div>

@@ -57,7 +57,7 @@ export const Header = ({ className, variant = "landing" }: HeaderProps) => {
               </nav>
               <Link to="/criar">
                 <Button variant="hero" size="default">
-                  Quero criar minha página
+                  Criar minha página
                 </Button>
               </Link>
             </div>
@@ -104,7 +104,7 @@ export const Header = ({ className, variant = "landing" }: HeaderProps) => {
                   </a>
                   <Link to="/criar" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="hero" className="w-full mt-2">
-                      Quero criar minha página
+                      Criar minha página
                     </Button>
                   </Link>
                 </nav>
@@ -116,7 +116,7 @@ export const Header = ({ className, variant = "landing" }: HeaderProps) => {
         {variant === "minimal" && (
           <Link to="/criar">
             <Button variant="soft" size="sm">
-              Quero criar minha página
+              Criar sua página
             </Button>
           </Link>
         )}

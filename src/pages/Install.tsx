@@ -152,9 +152,17 @@ const Install = () => {
     document.title = `${coupleNames} - ForeverUs`;
   };
 
+  // Detectar se é iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
   // Instalar PWA
   const handleInstall = async () => {
+    if (!page) return;
+    
+    const names = page.name2 ? `${page.name1} & ${page.name2}` : page.name1;
+    
     if (deferredPrompt) {
+      // Android - usar beforeinstallprompt
       const promptEvent = deferredPrompt as any;
       promptEvent.prompt();
       const { outcome } = await promptEvent.userChoice;
@@ -164,6 +172,21 @@ const Install = () => {
         setIsInstalled(true);
       }
       setDeferredPrompt(null);
+    } else if (isIOS && navigator.share) {
+      // iOS - abrir menu de compartilhamento nativo
+      try {
+        await navigator.share({
+          title: names,
+          text: `Instale o app de ${names}`,
+          url: window.location.href,
+        });
+        toast.info("Use 'Adicionar à Tela de Início' para instalar o app");
+      } catch (err) {
+        // Usuário cancelou
+      }
+    } else {
+      // Fallback - mostrar instrução simples
+      toast.info("Toque no menu do navegador e selecione 'Adicionar à Tela de Início'");
     }
   };
 
@@ -234,6 +257,9 @@ const Install = () => {
   const limits = getPlanLimits(page.plan);
   const coupleNames = page.name2 ? `${page.name1} & ${page.name2}` : page.name1;
   const photoUrl = page.photos?.[0] || page.photo_url || "/placeholder.svg";
+  
+  // Detectar se é iOS (movido para cima para usar em handleInstall)
+  const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   // Verificar se tem acesso ao PWA
   if (!limits.hasPWA) {
@@ -344,7 +370,7 @@ const Install = () => {
                   <Check className="w-5 h-5 text-primary" />
                   <span className="text-primary font-medium">App já instalado!</span>
                 </div>
-              ) : deferredPrompt ? (
+              ) : (
                 <Button
                   variant="neon"
                   size="lg"
@@ -354,31 +380,6 @@ const Install = () => {
                   <Download className="w-4 h-4" />
                   Instalar App
                 </Button>
-              ) : (
-                <div className="space-y-3">
-                  {/* Instruções para iOS */}
-                  <div className="rounded-xl bg-secondary/50 p-4 text-left space-y-2">
-                    <p className="text-sm font-medium text-foreground">
-                      📱 Como instalar:
-                    </p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>
-                        <strong>iPhone/iPad:</strong> Toque em{" "}
-                        <span className="inline-flex items-center px-1 bg-secondary rounded">
-                          ⬆️ Compartilhar
-                        </span>{" "}
-                        → "Adicionar à Tela de Início"
-                      </li>
-                      <li>
-                        <strong>Android:</strong> Toque no menu{" "}
-                        <span className="inline-flex items-center px-1 bg-secondary rounded">
-                          ⋮
-                        </span>{" "}
-                        → "Instalar app" ou "Adicionar à tela inicial"
-                      </li>
-                    </ul>
-                  </div>
-                </div>
               )}
 
               <Button

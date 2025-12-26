@@ -15,8 +15,37 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico"],
-      manifest: false, // We'll use dynamic manifest per page
+      includeAssets: ["favicon.ico", "pwa-icons/*.png"],
+      manifest: {
+        name: "ForeverUs - Páginas de Amor",
+        short_name: "ForeverUs",
+        description: "Crie páginas personalizadas para celebrar seu amor",
+        theme_color: "#722F37",
+        background_color: "#0D0D0F",
+        display: "standalone",
+        orientation: "portrait",
+        start_url: "/",
+        icons: [
+          {
+            src: "/pwa-icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any"
+          },
+          {
+            src: "/pwa-icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any"
+          },
+          {
+            src: "/pwa-icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
+          }
+        ]
+      },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },

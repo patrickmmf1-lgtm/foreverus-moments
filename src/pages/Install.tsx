@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlanLimits } from "@/lib/planLimits";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
-import { injectDynamicManifest, removeDynamicManifest } from "@/lib/pwaUtils";
 import { toast } from "sonner";
 
 interface PageData {
@@ -65,27 +64,12 @@ const Install = () => {
       setPage(data);
       setIsLoading(false);
 
-      // Injetar manifest dinâmico
+      // Update page title for personalization
       const coupleNames = data.name2 ? `${data.name1} & ${data.name2}` : data.name1;
-      const shortName = data.name2
-        ? `${data.name1.charAt(0)} & ${data.name2.charAt(0)}`
-        : data.name1.substring(0, 12);
-      const photoUrl = data.photos?.[0] || data.photo_url || "/placeholder.svg";
-
-      injectDynamicManifest({
-        coupleName: coupleNames,
-        shortName,
-        photoUrl,
-        slug: data.slug,
-      });
+      document.title = `Instalar ${coupleNames} - ForeverUs`;
     };
 
     fetchPage();
-
-    // Cleanup ao sair da página
-    return () => {
-      removeDynamicManifest();
-    };
   }, [slug]);
 
   // Instalar no Android (1 clique)

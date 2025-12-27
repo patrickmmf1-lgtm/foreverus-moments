@@ -64,6 +64,9 @@ const Install = () => {
       setPage(data);
       setIsLoading(false);
 
+      // Save slug to localStorage for PWA redirect
+      localStorage.setItem("foreverus_couple_slug", slug);
+
       // Update page title for personalization
       const coupleNames = data.name2 ? `${data.name1} & ${data.name2}` : data.name1;
       document.title = `Instalar ${coupleNames} - ForeverUs`;

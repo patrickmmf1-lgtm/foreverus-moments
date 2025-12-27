@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -110,6 +111,18 @@ const testimonials = [
 
 const Index = () => {
   const navigate = useNavigate();
+
+  // Check if user installed PWA with a saved couple page - redirect them
+  useEffect(() => {
+    const savedSlug = localStorage.getItem("foreverus_couple_slug");
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
+                         (window.navigator as any).standalone === true;
+    
+    // Only redirect if in standalone mode (PWA) and has saved slug
+    if (isStandalone && savedSlug) {
+      navigate(`/p/${savedSlug}`, { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">

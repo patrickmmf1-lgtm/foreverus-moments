@@ -88,6 +88,13 @@ const CouplePage = () => {
   const activitiesLibrary = activities.length > 0 ? activities : fallbackActivities;
   const currentActivity = activitiesLibrary[currentActivityIndex] || activitiesLibrary[0];
 
+  // Save slug to localStorage for PWA redirect
+  useEffect(() => {
+    if (slug) {
+      localStorage.setItem("foreverus_couple_slug", slug);
+    }
+  }, [slug]);
+
   // Update clock every second
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPlanLimits } from "@/lib/planLimits";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { toast } from "sonner";
+import { generatePersonalizedIcon, injectPersonalizedManifest } from "@/lib/generatePWAIcon";
 
 interface PageData {
   id: string;
@@ -29,6 +30,7 @@ const Install = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [iconReady, setIconReady] = useState(false);
 
   const { isInstalled, isIOS, isAndroid, isSafari, promptReady, promptInstall } = usePWAInstall();
 
@@ -70,6 +72,21 @@ const Install = () => {
       // Update page title for personalization
       const coupleNames = data.name2 ? `${data.name1} & ${data.name2}` : data.name1;
       document.title = `Instalar ${coupleNames} - ForeverUs`;
+
+      // Generate personalized PWA icon and inject manifest
+      try {
+        const photoUrl = data.photos?.[0] || data.photo_url || null;
+        const [icon192, icon512] = await Promise.all([
+          generatePersonalizedIcon(data.name1, data.name2, photoUrl, 192),
+          generatePersonalizedIcon(data.name1, data.name2, photoUrl, 512),
+        ]);
+        injectPersonalizedManifest(data.name1, data.name2, icon192, icon512);
+        setIconReady(true);
+      } catch (iconError) {
+        console.error("Error generating personalized icon:", iconError);
+        // Continue without personalized icon
+        setIconReady(true);
+      }
     };
 
     fetchPage();

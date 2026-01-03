@@ -499,7 +499,7 @@ const Index = () => {
               Casais que eternizaram seu amor
             </h2>
             <p className="text-muted-foreground">
-              Veja o que estão dizendo sobre o ForeverUs
+              Veja o que estão dizendo sobre o PraSempre
             </p>
           </motion.div>
 

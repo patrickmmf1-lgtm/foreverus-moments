@@ -55,7 +55,7 @@ export const FAQ = () => {
             Perguntas frequentes
           </h2>
           <p className="text-muted-foreground">
-            Tudo o que você precisa saber sobre o ForeverUs
+            Tudo o que você precisa saber sobre o PraSempre
           </p>
         </motion.div>
 

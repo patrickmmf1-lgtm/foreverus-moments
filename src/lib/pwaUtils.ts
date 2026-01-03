@@ -15,7 +15,7 @@ export const injectDynamicManifest = (data: ManifestData): void => {
   const manifest = {
     name: coupleName,
     short_name: shortName,
-    description: `Página de ${coupleName} - ForeverUs`,
+    description: `Página de ${coupleName} - PraSempre`,
     start_url: `/p/${slug}`,
     scope: "/",
     display: "standalone",
@@ -66,7 +66,7 @@ export const injectDynamicManifest = (data: ManifestData): void => {
   updateThemeColor("#722F37");
 
   // Atualizar título da página
-  document.title = `${coupleName} - ForeverUs`;
+  document.title = `${coupleName} - PraSempre`;
 };
 
 /**

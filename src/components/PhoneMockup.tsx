@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
 import { Gift, Volume2 } from "lucide-react";
 import { DEMO_COUPLE_DATA } from "@/config/demoData";
-import CoupleNames from "@/components/CoupleNames";
 
 // Use centralized demo data
 const demoData = {
@@ -108,7 +107,7 @@ export const PhoneMockup = () => {
                     textShadow: '0 2px 10px rgba(0,0,0,0.5)'
                   }}
                 >
-                  <CoupleNames name1={demoData.name1} name2={demoData.name2} />
+                  {demoData.name1} & {demoData.name2}
                 </h2>
 
                 {/* Together for label */}

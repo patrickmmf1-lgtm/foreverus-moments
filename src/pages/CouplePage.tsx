@@ -9,7 +9,6 @@ import { usePageData } from "@/hooks/usePageData";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import WeeklyRitualCard from "@/components/WeeklyRitualCard";
 import PhotoCarousel from "@/components/PhotoCarousel";
-import CoupleNames from "@/components/CoupleNames";
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -243,7 +242,9 @@ const CouplePage = () => {
   const isFavorited = favorites.includes(currentActivity.id);
 
   // Display names with proper spacing
-  const displayTitle = <CoupleNames name1={page.name1} name2={page.name2} />;
+  const displayTitle = page.name2 
+    ? `${page.name1}  &  ${page.name2}` 
+    : page.name1;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">

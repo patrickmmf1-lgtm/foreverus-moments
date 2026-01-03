@@ -241,9 +241,9 @@ const CouplePage = () => {
   const isCompleted = completedActivities.includes(currentActivity.id);
   const isFavorited = favorites.includes(currentActivity.id);
 
-  // Display names
+  // Display names with proper spacing
   const displayTitle = page.name2 
-    ? `${page.name1} & ${page.name2}` 
+    ? `${page.name1}  &  ${page.name2}` 
     : page.name1;
 
   return (

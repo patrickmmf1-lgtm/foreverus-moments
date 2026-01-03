@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import logoImage from "@/assets/logo.png";
+import logoImage from "@/assets/logo-icon.png";
 
 interface LogoProps {
   className?: string;
@@ -10,18 +10,34 @@ interface LogoProps {
 }
 
 const imageSizes = {
-  sm: "h-8",
-  md: "h-10",
-  lg: "h-12",
+  sm: "h-7",
+  md: "h-9",
+  lg: "h-11",
 };
 
 export const Logo = ({ 
   className, 
-  showIcon = true, 
   size = "md",
-  variant = "default",
   iconOnly = false
 }: LogoProps) => {
+  if (iconOnly) {
+    // Show only the icon portion for small spaces
+    return (
+      <div className={cn("flex items-center", className)}>
+        <img 
+          src={logoImage} 
+          alt="PraSempre" 
+          className={cn(
+            "object-contain object-left",
+            imageSizes[size],
+            "max-w-[40px]"
+          )}
+          style={{ objectPosition: "left center" }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex items-center", className)}>
       <img 
@@ -29,8 +45,7 @@ export const Logo = ({
         alt="PraSempre" 
         className={cn(
           "object-contain",
-          imageSizes[size],
-          iconOnly ? "max-w-[40px]" : "max-w-[180px]"
+          imageSizes[size]
         )}
       />
     </div>

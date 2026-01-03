@@ -11,6 +11,7 @@ interface PageData {
   message: string;
   start_date: string;
   photo_url: string | null;
+  photos: string[] | null;
   plan: string;
   created_at: string;
   is_active: boolean;

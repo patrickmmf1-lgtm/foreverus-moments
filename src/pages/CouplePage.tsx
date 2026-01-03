@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { usePageData } from "@/hooks/usePageData";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import WeeklyRitualCard from "@/components/WeeklyRitualCard";
+import PhotoCarousel from "@/components/PhotoCarousel";
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -279,12 +280,13 @@ const CouplePage = () => {
 
       {/* HERO SECTION - LoveMemo Style */}
       <section className="relative h-screen w-full overflow-hidden">
-        {/* Background Photo */}
+        {/* Background Photo/Carousel */}
         <div className="absolute inset-0">
-          <img
-            src={page.photo_url || defaultPhotoUrl}
-            alt="Foto"
-            className="w-full h-full object-cover"
+          <PhotoCarousel 
+            photos={page.photos || [page.photo_url || defaultPhotoUrl]}
+            fallbackPhoto={defaultPhotoUrl}
+            className="w-full h-full"
+            interval={10000}
           />
           {/* Subtle dark overlay */}
           <div className="absolute inset-0 bg-black/30" />

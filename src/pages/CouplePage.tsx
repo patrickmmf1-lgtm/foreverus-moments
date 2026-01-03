@@ -6,7 +6,8 @@ import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Vo
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePageData } from "@/hooks/usePageData";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
+import WeeklyRitualCard from "@/components/WeeklyRitualCard";
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -72,17 +73,19 @@ const CouplePage = () => {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showSurprise, setShowSurprise] = useState(false);
 
-  // Plan limits hook - use page data once loaded
+  // Plan restrictions hook - use page data once loaded
   const { 
-    limits, 
+    features,
     canDoActivity, 
-    canRegenerate, 
+    canReroll, 
     canFavorite,
+    showFavorites,
+    showWeeklyRitual,
     incrementActivity, 
-    incrementRegenerate,
+    incrementReroll,
     remainingActivities,
-    remainingRegenerates 
-  } = usePlanLimits(page?.plan || "9_90", page?.id || "temp");
+    remainingRerolls 
+  } = usePlanRestrictions(page?.plan || "9_90", page?.id || "temp");
 
   // Use activities from database or fallback
   const activitiesLibrary = activities.length > 0 ? activities : fallbackActivities;
@@ -146,24 +149,27 @@ const CouplePage = () => {
   const seconds = differenceInSeconds(now, startDate) % 60;
 
   const handleRefresh = () => {
-    if (!canRegenerate) {
+    if (!canReroll) {
+      const rerollLimit = features.rerollsPerDay === 'unlimited' ? "∞" : features.rerollsPerDay;
       toast.error("Limite de trocas atingido!", {
-        description: `Você pode trocar ${limits.regeneratesPerDay === Infinity ? "∞" : limits.regeneratesPerDay}x por dia no seu plano.`,
+        description: `Você pode trocar ${rerollLimit}x por dia no seu plano.`,
       });
       return;
     }
-    incrementRegenerate();
+    incrementReroll();
     const nextIndex = (currentActivityIndex + 1) % activitiesLibrary.length;
     setCurrentActivityIndex(nextIndex);
+    const remaining = remainingRerolls === 'unlimited' ? null : (remainingRerolls as number) - 1;
     toast.success("Nova sugestão gerada!", {
-      description: remainingRegenerates > 1 ? `${remainingRegenerates - 1} trocas restantes hoje` : undefined,
+      description: remaining !== null && remaining > 0 ? `${remaining} trocas restantes hoje` : undefined,
     });
   };
 
   const handleComplete = () => {
     if (!canDoActivity) {
+      const activityLimit = features.activitiesPerDay === 'unlimited' ? "∞" : features.activitiesPerDay;
       toast.error("Limite de atividades atingido!", {
-        description: `Você pode completar ${limits.activitiesPerDay === Infinity ? "∞" : limits.activitiesPerDay} atividade(s) por dia no seu plano.`,
+        description: `Você pode completar ${activityLimit} atividade(s) por dia no seu plano.`,
       });
       return;
     }
@@ -184,8 +190,9 @@ const CouplePage = () => {
       toast.info("Removido dos favoritos");
     } else {
       if (!canFavorite(favorites.length)) {
+        const maxFav = features.maxFavorites === 'unlimited' ? "∞" : features.maxFavorites;
         toast.error("Limite de favoritos atingido!", {
-          description: `Seu plano permite até ${limits.favoritesLimit} favorito(s).`,
+          description: `Seu plano permite até ${maxFav} favorito(s).`,
         });
         return;
       }
@@ -418,6 +425,9 @@ const CouplePage = () => {
             </div>
           </motion.div>
 
+          {/* Weekly Ritual Card */}
+          <WeeklyRitualCard hasAccess={showWeeklyRitual} />
+
           {/* Activity card */}
           <motion.div
             key={currentActivity.id}
@@ -474,10 +484,10 @@ const CouplePage = () => {
                 size="icon"
                 className="h-12 w-12"
                 onClick={handleFavorite}
-                disabled={limits.favoritesLimit === 0}
-                title={limits.favoritesLimit === 0 ? "Upgrade para usar favoritos" : undefined}
+                disabled={!showFavorites}
+                title={!showFavorites ? "Upgrade para usar favoritos" : undefined}
               >
-                {limits.favoritesLimit === 0 ? (
+                {!showFavorites ? (
                   <Lock className="w-5 h-5 text-muted-foreground" />
                 ) : (
                   <Heart className={`w-5 h-5 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`} />
@@ -489,10 +499,10 @@ const CouplePage = () => {
                 size="icon"
                 className="h-12 w-12"
                 onClick={handleRefresh}
-                disabled={!canRegenerate}
-                title={!canRegenerate ? "Limite de trocas atingido" : "Outra sugestão"}
+                disabled={!canReroll}
+                title={!canReroll ? "Limite de trocas atingido" : "Outra sugestão"}
               >
-                {!canRegenerate ? (
+                {!canReroll ? (
                   <Lock className="w-5 h-5 text-muted-foreground" />
                 ) : (
                   <RefreshCw className="w-5 h-5" />
@@ -501,13 +511,13 @@ const CouplePage = () => {
             </div>
 
             {/* Plan status */}
-            {(limits.activitiesPerDay !== Infinity || limits.regeneratesPerDay !== Infinity) && (
+            {(features.activitiesPerDay !== 'unlimited' || features.rerollsPerDay !== 'unlimited') && (
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
-                {limits.activitiesPerDay !== Infinity && (
-                  <span>{remainingActivities}/{limits.activitiesPerDay} atividades</span>
+                {features.activitiesPerDay !== 'unlimited' && (
+                  <span>{remainingActivities}/{features.activitiesPerDay} atividades</span>
                 )}
-                {limits.regeneratesPerDay !== Infinity && (
-                  <span>{remainingRegenerates}/{limits.regeneratesPerDay} trocas</span>
+                {features.rerollsPerDay !== 'unlimited' && (
+                  <span>{remainingRerolls}/{features.rerollsPerDay} trocas</span>
                 )}
               </div>
             )}
@@ -527,7 +537,7 @@ const CouplePage = () => {
           )}
 
           {/* Favorites list */}
-          {limits.favoritesLimit > 0 && favorites.length > 0 && (
+          {showFavorites && favorites.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -535,7 +545,7 @@ const CouplePage = () => {
             >
               <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-rose-500" />
-                Favoritas ({favorites.length}/{limits.favoritesLimit === Infinity ? "∞" : limits.favoritesLimit})
+                Favoritas ({favorites.length}/{features.maxFavorites === 'unlimited' ? "∞" : features.maxFavorites})
               </h4>
               <div className="space-y-2">
                 {favorites.map(id => {
@@ -553,7 +563,7 @@ const CouplePage = () => {
           )}
 
           {/* Upgrade hint for basic plans */}
-          {limits.favoritesLimit === 0 && (
+          {!showFavorites && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

@@ -194,7 +194,7 @@ const Index = () => {
                 <Button 
                   variant="glass" 
                   size="xl"
-                  onClick={() => navigate("/p/demo")}
+                  onClick={() => navigate("/demo")}
                   className="w-full sm:w-auto"
                 >
                   Ver exemplo

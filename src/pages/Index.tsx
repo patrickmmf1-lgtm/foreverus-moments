@@ -93,7 +93,7 @@ const plans = [{
     text: "Contador de dias juntos",
     included: true
   }, {
-    text: "1 foto + mensagem",
+    text: "3 fotos + mensagens",
     included: true
   }, {
     text: "Atividades ilimitadas",

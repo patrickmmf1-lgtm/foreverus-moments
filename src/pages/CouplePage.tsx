@@ -243,7 +243,7 @@ const CouplePage = () => {
 
   // Display names with proper spacing
   const displayTitle = page.name2 
-    ? `${page.name1}  &  ${page.name2}` 
+    ? <>{page.name1}{" "}&{" "}{page.name2}</>
     : page.name1;
 
   return (

@@ -10,9 +10,9 @@ interface LogoProps {
 }
 
 const imageSizes = {
-  sm: "h-20",
-  md: "h-24",
-  lg: "h-28",
+  sm: "h-10",
+  md: "h-12",
+  lg: "h-16",
 };
 
 export const Logo = ({ 

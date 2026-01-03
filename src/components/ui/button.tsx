@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-card hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // ForeverUs custom variants - Dark theme
+        // PraSempre custom variants - Dark theme
         hero: "bg-gradient-primary text-primary-foreground shadow-glow hover:shadow-neon hover:scale-[1.02] active:scale-[0.98] text-base font-bold",
         "hero-outline": "border-2 border-primary bg-transparent text-primary hover:bg-primary/10 hover:shadow-glow transition-all",
         gold: "bg-gradient-gold text-gold-foreground shadow-soft hover:shadow-elevated hover:scale-[1.02] active:scale-[0.98] font-bold",

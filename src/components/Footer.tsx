@@ -103,7 +103,7 @@ export const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-border/30 text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ForeverUs. Todos os direitos reservados.
+            © {new Date().getFullYear()} PraSempre. Todos os direitos reservados.
           </p>
         </div>
       </div>

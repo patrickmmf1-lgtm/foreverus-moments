@@ -69,7 +69,7 @@ const Install = () => {
 
       // Update page title for personalization
       const coupleNames = data.name2 ? `${data.name1} & ${data.name2}` : data.name1;
-      document.title = `Instalar ${coupleNames} - ForeverUs`;
+      document.title = `Instalar ${coupleNames} - PraSempre`;
     };
 
     fetchPage();

@@ -211,7 +211,7 @@ const CouplePage = () => {
       try {
         await navigator.share({
           title,
-          text: `Veja nossa página do casal no ForeverUs!`,
+          text: `Veja nossa página do casal no PraSempre!`,
           url: shareUrl,
         });
       } catch (err) {
@@ -602,7 +602,7 @@ const CouplePage = () => {
             <p className="text-xs text-muted-foreground">
               Feito com 💕 no{" "}
               <a href="/" className="text-primary hover:underline">
-                ForeverUs
+                PraSempre
               </a>
             </p>
           </motion.div>

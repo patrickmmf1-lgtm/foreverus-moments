@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import HeartInfinity from "@/components/HeartInfinity";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlanLimits } from "@/lib/planLimits";
+import { getPlanFeatures } from "@/config/planLimits";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { toast } from "sonner";
 
@@ -145,12 +145,12 @@ const Install = () => {
     );
   }
 
-  const limits = getPlanLimits(page.plan);
+  const planFeatures = getPlanFeatures(page.plan);
   const coupleNames = page.name2 ? `${page.name1} & ${page.name2}` : page.name1;
   const photoUrl = page.photos?.[0] || page.photo_url || "/placeholder.svg";
 
   // Verificar se tem acesso ao PWA
-  if (!limits.hasPWA) {
+  if (!planFeatures.hasPWA) {
     return (
       <div className="min-h-screen bg-gradient-hero">
         <Header variant="minimal" />
@@ -243,39 +243,74 @@ const Install = () => {
               Siga os passos para instalar:
             </p>
 
-            {/* Passo 1 */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+            {/* Passo 1 - iOS Share Icon */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
+            >
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 1
               </div>
               <div className="flex-1">
-                <p className="text-sm text-foreground">Toque no botão</p>
-                <p className="text-xs text-muted-foreground">Compartilhar</p>
+                <p className="text-sm font-medium text-foreground">Toque no ícone</p>
+                <p className="text-xs text-muted-foreground">de compartilhar</p>
               </div>
-              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                />
-              </svg>
-            </div>
+              {/* iOS Share Icon - Square with arrow up */}
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+                </svg>
+              </div>
+            </motion.div>
 
             {/* Passo 2 */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
+            >
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
                 2
               </div>
               <div className="flex-1">
-                <p className="text-sm text-foreground">Selecione</p>
+                <p className="text-sm font-medium text-foreground">Role para baixo</p>
+                <p className="text-xs text-muted-foreground">nas opções do menu</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+            </motion.div>
+
+            {/* Passo 3 */}
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                3
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Toque em</p>
                 <p className="text-xs text-muted-foreground">"Adicionar à Tela de Início"</p>
               </div>
-              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </div>
+            </motion.div>
           </div>
+
+          <p className="text-xs text-center text-muted-foreground">
+            O app aparecerá na sua tela inicial como um ícone
+          </p>
         </div>
       );
     }

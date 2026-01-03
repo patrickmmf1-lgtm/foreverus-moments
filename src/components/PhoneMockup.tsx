@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
 import { Gift, Volume2 } from "lucide-react";
+import { DEMO_COUPLE_DATA } from "@/config/demoData";
 
-// Demo data
+// Use centralized demo data
 const demoData = {
-  name1: "Ana",
-  name2: "João",
-  occasion: "Nossa História de Amor",
-  startDate: new Date("2022-06-15"),
-  photoUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&q=80",
+  name1: DEMO_COUPLE_DATA.name1,
+  name2: DEMO_COUPLE_DATA.name2,
+  occasion: DEMO_COUPLE_DATA.occasion,
+  startDate: new Date(DEMO_COUPLE_DATA.start_date),
+  photoUrl: DEMO_COUPLE_DATA.photo_url,
 };
 
 // Mini time card for mockup

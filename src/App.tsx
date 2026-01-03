@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Criar from "./pages/Criar";
 import CouplePage from "./pages/CouplePage";
+import Demo from "./pages/Demo";
 import Sucesso from "./pages/Sucesso";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/criar" element={<Criar />} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/p/:slug" element={<CouplePage />} />
           <Route path="/sucesso" element={<Sucesso />} />
           <Route path="/install/:slug" element={<Install />} />

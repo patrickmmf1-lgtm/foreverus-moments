@@ -9,7 +9,6 @@ import Testimonial from "@/components/Testimonial";
 import FAQ from "@/components/FAQ";
 import HeartInfinity from "@/components/HeartInfinity";
 import PhoneMockup from "@/components/PhoneMockup";
-import CoupleNames from "@/components/CoupleNames";
 import { Heart, Sparkles, Gift, ArrowRight, CreditCard, Mail, PartyPopper, FileText } from "lucide-react";
 const plans = [{
   name: "Presente",
@@ -425,7 +424,7 @@ const Index = () => {
                         <div className="w-10 h-10 rounded-full bg-background/30 flex items-center justify-center mb-2">
                           <span className="text-lg">💑</span>
                         </div>
-                        <CoupleNames name1="Ana" name2="João" className="text-[8px] text-primary-foreground font-bold text-center" />
+                        <p className="text-[8px] text-primary-foreground font-bold text-center">Ana{" "}&{" "}João</p>
                         <p className="text-[10px] text-primary-foreground/80 font-bold mt-1">847 dias</p>
                         <p className="text-[6px] text-primary-foreground/60">2 anos, 3 meses</p>
                       </div>

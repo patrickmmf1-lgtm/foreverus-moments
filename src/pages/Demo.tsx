@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import WeeklyRitualCard from "@/components/WeeklyRitualCard";
-import CoupleNames from "@/components/CoupleNames";
 import { DEMO_COUPLE_DATA } from "@/config/demoData";
 import { PlanType } from "@/config/planLimits";
 
@@ -192,7 +191,7 @@ const Demo = () => {
 
   const isCompleted = completedActivities.includes(currentActivity.id);
   const isFavorited = favorites.includes(currentActivity.id);
-  const displayTitle = <CoupleNames name1={page.name1} name2={page.name2} />;
+  const displayTitle = <>{page.name1}{" "}&{" "}{page.name2}</>;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">

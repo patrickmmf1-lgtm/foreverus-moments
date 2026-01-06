@@ -95,7 +95,7 @@ const CouplePage = () => {
   // Save slug to localStorage for PWA redirect
   useEffect(() => {
     if (slug) {
-      localStorage.setItem("foreverus_couple_slug", slug);
+      localStorage.setItem("prasempre_couple_slug", slug);
     }
   }, [slug]);
 
@@ -212,7 +212,7 @@ const CouplePage = () => {
       try {
         await navigator.share({
           title,
-          text: `Veja nossa página do casal no PraSempre!`,
+          text: "Veja nossa página do casal no PraSempre!",
           url: shareUrl,
         });
       } catch (err) {

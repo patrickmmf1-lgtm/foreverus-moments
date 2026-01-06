@@ -2,15 +2,24 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from "virtual:pwa-register";
+import { checkAndClearOldVersion } from "./utils/clearOldCache";
 
-// Register Service Worker (required for installability on many browsers)
-registerSW({
+// Verificar versão e limpar cache antigo se necessário
+checkAndClearOldVersion().then((wasCleared) => {
+  if (wasCleared) {
+    console.log("Cache limpo - App atualizado para PraSempre v2.0");
+  }
+});
+
+// Register Service Worker with auto-update
+const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    // Optional: could show a toast, but keep minimal.
+    // Forçar atualização imediata quando houver nova versão
+    updateSW(true);
   },
   onOfflineReady() {
-    // Optional
+    console.log("App pronto para uso offline");
   },
 });
 

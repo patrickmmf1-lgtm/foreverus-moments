@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { validateImages } from "@/utils/imageValidation";
 
 // Flag para modo de teste - mude para false quando for para produção
 const TEST_MODE = true;
@@ -50,6 +51,14 @@ export function useCreatePage() {
 
       // Upload photos if provided
       if (data.photoFiles && data.photoFiles.length > 0) {
+        // Validar imagens antes do upload
+        const validationResult = validateImages(data.photoFiles);
+        if (!validationResult.isValid) {
+          toast.error(validationResult.error);
+          setIsLoading(false);
+          return null;
+        }
+        
         for (const file of data.photoFiles) {
           const fileExt = file.name.split(".").pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;

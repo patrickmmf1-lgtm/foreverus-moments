@@ -29,18 +29,38 @@ serve(async (req) => {
       throw new Error('Payment service not configured');
     }
 
-    const { slug, plan, customerEmail } = await req.json();
+    const body = await req.json();
+    const { slug, plan, customerEmail } = body;
 
     console.log('Creating billing for:', { slug, plan, customerEmail });
 
-    if (!slug || !plan) {
-      throw new Error('Missing required fields: slug and plan');
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customerEmail || !emailRegex.test(customerEmail)) {
+      return new Response(
+        JSON.stringify({ error: 'Email inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar plano
+    const validPlans = ['9_90', '19_90', '29_90'];
+    if (!validPlans.includes(plan)) {
+      return new Response(
+        JSON.stringify({ error: 'Plano inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar slug
+    if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+      return new Response(
+        JSON.stringify({ error: 'Slug inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const planInfo = PLAN_PRICES[plan];
-    if (!planInfo) {
-      throw new Error(`Invalid plan: ${plan}`);
-    }
 
     // Construir URL de retorno dinâmica
     const origin = req.headers.get('origin') || 'https://msniwdfealteehiywbks.lovableproject.com';
@@ -51,26 +71,24 @@ serve(async (req) => {
     // Criar ou buscar cliente na AbacatePay
     let customerId: string | null = null;
     
-    if (customerEmail) {
-      console.log('Creating customer with email:', customerEmail);
-      const customerResponse = await fetch(`${ABACATEPAY_API_URL}/customer/create`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${abacatePayApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: customerEmail,
-          name: 'Cliente Minha Metade',
-        }),
-      });
+    console.log('Creating customer with email:', customerEmail);
+    const customerResponse = await fetch(`${ABACATEPAY_API_URL}/customer/create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${abacatePayApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: customerEmail,
+        name: 'Cliente PraSempre',
+      }),
+    });
 
-      const customerData = await customerResponse.json();
-      console.log('Customer response:', customerData);
+    const customerData = await customerResponse.json();
+    console.log('Customer response:', customerData);
 
-      if (customerData.data?.id) {
-        customerId = customerData.data.id;
-      }
+    if (customerData.data?.id) {
+      customerId = customerData.data.id;
     }
 
     // Criar billing na AbacatePay
@@ -80,7 +98,7 @@ serve(async (req) => {
       products: [
         {
           externalId: slug,
-          name: `Minha Metade - Plano ${planInfo.name}`,
+          name: `PraSempre - Plano ${planInfo.name}`,
           quantity: 1,
           price: planInfo.amount,
         }

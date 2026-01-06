@@ -12,7 +12,7 @@ function getTodayKey(): string {
 }
 
 function getStorageKey(pageId: string): string {
-  return `foreverus_counters_${pageId}`;
+  return `prasempre_counters_${pageId}`;
 }
 
 function loadCounters(pageId: string): DailyCounters {

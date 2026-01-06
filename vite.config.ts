@@ -16,14 +16,13 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icons/*.png"],
-      // Make PWA features work in dev/preview too
       devOptions: {
-        enabled: true,
+        enabled: false, // Desabilitar em dev para evitar cache
       },
       manifest: {
-        name: "ForeverUs - Páginas de Amor",
-        short_name: "ForeverUs",
-        description: "Crie páginas personalizadas para celebrar seu amor",
+        name: "PraSempre",
+        short_name: "PraSempre",
+        description: "Sua história de amor para sempre",
         theme_color: "#722F37",
         background_color: "#0D0D0F",
         display: "standalone",
@@ -52,6 +51,9 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },
     }),

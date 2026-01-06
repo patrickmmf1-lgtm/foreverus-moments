@@ -53,6 +53,8 @@ export type Database = {
           is_completed: boolean | null
           is_favorited: boolean | null
           page_id: string
+          page_slug: string | null
+          session_token: string | null
         }
         Insert: {
           activity_id: string
@@ -62,6 +64,8 @@ export type Database = {
           is_completed?: boolean | null
           is_favorited?: boolean | null
           page_id: string
+          page_slug?: string | null
+          session_token?: string | null
         }
         Update: {
           activity_id?: string
@@ -71,6 +75,8 @@ export type Database = {
           is_completed?: boolean | null
           is_favorited?: boolean | null
           page_id?: string
+          page_slug?: string | null
+          session_token?: string | null
         }
         Relationships: [
           {

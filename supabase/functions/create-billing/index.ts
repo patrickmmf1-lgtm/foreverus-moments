@@ -203,7 +203,7 @@ serve(async (req) => {
     // Criar billing na AbacatePay
     const billingPayload: Record<string, unknown> = {
       frequency: 'ONE_TIME',
-      methods: ['PIX', 'CREDIT_CARD'],
+      methods: ['PIX'],
       products: [
         {
           externalId: slug,

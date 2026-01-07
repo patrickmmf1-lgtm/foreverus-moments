@@ -45,8 +45,9 @@ export function usePageData(slug: string | undefined) {
       setError(null);
 
       // Fetch page data
+      // Use the secure pages_public view which excludes billing_id and status
       const { data: pageData, error: pageError } = await supabase
-        .from("pages")
+        .from("pages_public")
         .select("*")
         .eq("slug", slug)
         .eq("is_active", true)

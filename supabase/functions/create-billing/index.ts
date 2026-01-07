@@ -116,7 +116,7 @@ serve(async (req) => {
     // Criar ou buscar cliente na AbacatePay
     let customerId: string | null = null;
     
-    console.log('Creating customer with email:', customerEmail);
+    console.log('Creating customer...');
     const customerResponse = await fetch(`${ABACATEPAY_API_URL}/customer/create`, {
       method: 'POST',
       headers: {
@@ -124,7 +124,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: customerEmail,
+        email: sanitizedEmail,
         name: 'Cliente PraSempre',
       }),
     });
@@ -180,11 +180,7 @@ serve(async (req) => {
       throw new Error('Failed to create billing - no URL returned');
     }
 
-    // Atualizar página com billing_id
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+    // Atualizar página com billing_id (reusing supabase client from earlier)
     const { error: updateError } = await supabase
       .from('pages')
       .update({ billing_id: billingData.data.id })

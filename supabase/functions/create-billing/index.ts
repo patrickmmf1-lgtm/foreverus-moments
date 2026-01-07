@@ -32,39 +32,84 @@ serve(async (req) => {
     const body = await req.json();
     const { slug, plan, customerEmail } = body;
 
-    console.log('Creating billing for:', { slug, plan, customerEmail });
-
-    // Validar email
+    // Sanitize and validate email with length limit
+    const sanitizedEmail = typeof customerEmail === 'string' ? customerEmail.trim().toLowerCase() : '';
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!customerEmail || !emailRegex.test(customerEmail)) {
+    if (!sanitizedEmail || sanitizedEmail.length > 254 || !emailRegex.test(sanitizedEmail)) {
       return new Response(
         JSON.stringify({ error: 'Email inválido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validar plano
-    const validPlans = ['9_90', '19_90', '29_90'];
-    if (!validPlans.includes(plan)) {
+    // Validate plan against known plans
+    if (!plan || typeof plan !== 'string' || !PLAN_PRICES[plan]) {
       return new Response(
         JSON.stringify({ error: 'Plano inválido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validar slug
-    if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+    // Validate slug with length limits
+    if (!slug || typeof slug !== 'string' || slug.length < 3 || slug.length > 100 || !/^[a-z0-9-]+$/.test(slug)) {
       return new Response(
         JSON.stringify({ error: 'Slug inválido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('Creating billing for:', { slug, plan, email: sanitizedEmail.substring(0, 5) + '***' });
+
+    // Initialize Supabase client for page validation
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify page exists with pending_payment status and no existing billing
+    const { data: pageData, error: pageError } = await supabase
+      .from('pages')
+      .select('id, status, billing_id, plan')
+      .eq('slug', slug)
+      .single();
+
+    if (pageError || !pageData) {
+      console.error('Page not found:', slug);
+      return new Response(
+        JSON.stringify({ error: 'Página não encontrada' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (pageData.status !== 'pending_payment') {
+      console.error('Page already processed:', slug, pageData.status);
+      return new Response(
+        JSON.stringify({ error: 'Esta página já foi processada' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (pageData.billing_id) {
+      console.error('Page already has billing:', slug);
+      return new Response(
+        JSON.stringify({ error: 'Já existe um pagamento para esta página' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const planInfo = PLAN_PRICES[plan];
 
-    // Construir URL de retorno dinâmica
-    const origin = req.headers.get('origin') || 'https://msniwdfealteehiywbks.lovableproject.com';
-    const returnUrl = `${origin}/sucesso?slug=${slug}`;
+    // Build dynamic return URL with validated origin
+    const requestOrigin = req.headers.get('origin');
+    const allowedOrigins = [
+      'https://msniwdfealteehiywbks.lovableproject.com',
+      'https://prasempre.com.br',
+      'http://localhost:5173',
+      'http://localhost:8080',
+    ];
+    const origin = requestOrigin && allowedOrigins.some(o => requestOrigin.startsWith(o.replace(/:\d+$/, '')))
+      ? requestOrigin
+      : 'https://msniwdfealteehiywbks.lovableproject.com';
+    const returnUrl = `${origin}/sucesso?slug=${encodeURIComponent(slug)}`;
 
     console.log('Return URL:', returnUrl);
 

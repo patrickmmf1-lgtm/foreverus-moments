@@ -25,12 +25,14 @@ const Sucesso = () => {
   const baseUrl = window.location.origin;
   const pageLink = `${baseUrl}/p/${slug}`;
 
-  // Buscar status da página
+  // Buscar status da página usando a view pública
+  // Se a página aparece na view (is_active = true), o pagamento foi processado
   useEffect(() => {
     const fetchPageStatus = async () => {
+      // Try to find the page in the public view
       const { data, error } = await supabase
-        .from('pages')
-        .select('status, plan, name1, name2')
+        .from('pages_public')
+        .select('plan, name1, name2, is_active')
         .eq('slug', slug)
         .maybeSingle();
 
@@ -41,12 +43,14 @@ const Sucesso = () => {
       }
 
       if (!data) {
-        console.log('Page not found');
-        setPageStatus('active'); // Fallback
+        // Page not in public view means either not exists or pending payment
+        // For pending payment, the page exists but is_active might be false or status is pending
+        setPageStatus('pending_payment');
         return;
       }
 
-      setPageStatus(data.status as 'pending_payment' | 'active');
+      // Page exists in public view with is_active = true means payment processed
+      setPageStatus('active');
       setPagePlan(data.plan);
       setPageName(data.name2 ? `${data.name1} & ${data.name2}` : data.name1);
     };
@@ -60,14 +64,18 @@ const Sucesso = () => {
 
     setIsPolling(true);
     const interval = setInterval(async () => {
+      // Check if page now appears in public view (meaning payment processed)
       const { data, error } = await supabase
-        .from('pages')
-        .select('status')
+        .from('pages_public')
+        .select('plan, name1, name2')
         .eq('slug', slug)
         .maybeSingle();
 
-      if (!error && data?.status === 'active') {
+      if (!error && data) {
+        // Page now exists in public view - payment confirmed
         setPageStatus('active');
+        setPagePlan(data.plan);
+        setPageName(data.name2 ? `${data.name1} & ${data.name2}` : data.name1);
         setIsPolling(false);
         toast.success('Pagamento confirmado!');
         clearInterval(interval);

@@ -93,6 +93,13 @@ export type Database = {
             referencedRelation: "pages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "page_activity_logs_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pages: {
@@ -151,7 +158,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pages_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          is_active: boolean | null
+          message: string | null
+          name1: string | null
+          name2: string | null
+          occasion: string | null
+          photo_url: string | null
+          photos: string[] | null
+          plan: string | null
+          slug: string | null
+          start_date: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          message?: string | null
+          name1?: string | null
+          name2?: string | null
+          occasion?: string | null
+          photo_url?: string | null
+          photos?: string[] | null
+          plan?: string | null
+          slug?: string | null
+          start_date?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          message?: string | null
+          name1?: string | null
+          name2?: string | null
+          occasion?: string | null
+          photo_url?: string | null
+          photos?: string[] | null
+          plan?: string | null
+          slug?: string | null
+          start_date?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

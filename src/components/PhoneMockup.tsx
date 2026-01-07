@@ -107,7 +107,7 @@ export const PhoneMockup = () => {
                     textShadow: '0 2px 10px rgba(0,0,0,0.5)'
                   }}
                 >
-                  {demoData.name1}{" "}&{" "}{demoData.name2}
+                  {demoData.name1}<span className="mx-2">&</span>{demoData.name2}
                 </h2>
 
                 {/* Together for label */}

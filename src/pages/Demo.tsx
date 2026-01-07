@@ -191,7 +191,7 @@ const Demo = () => {
 
   const isCompleted = completedActivities.includes(currentActivity.id);
   const isFavorited = favorites.includes(currentActivity.id);
-  const displayTitle = <>{page.name1}{" "}&{" "}{page.name2}</>;
+  const displayTitle = <>{page.name1}<span className="mx-2">&</span>{page.name2}</>;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">

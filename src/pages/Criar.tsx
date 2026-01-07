@@ -39,6 +39,7 @@ const formSchema = z.object({
   startDate: z.date({ required_error: "Data obrigatória" }),
   message: z.string().min(1, "Mensagem obrigatória").max(300, "Máximo 300 caracteres"),
   plan: z.enum(["9_90", "19_90", "29_90"]),
+  email: z.string().email("Email inválido").min(1, "Email obrigatório").max(254, "Email muito longo"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -137,6 +138,7 @@ const Criar = () => {
       startDate: data.startDate,
       plan: data.plan,
       photoFiles: photos.map(p => p.file),
+      customerEmail: data.email,
     });
 
     toast.dismiss();
@@ -339,6 +341,29 @@ const Criar = () => {
                   )}
                 </div>
               )}
+            </motion.div>
+
+            {/* Email */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.32 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="email" className="text-sm">Seu email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                className="input-romantic h-12 text-base"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Para receber a confirmação do pagamento
+              </p>
             </motion.div>
 
             {/* Occasion (optional) */}

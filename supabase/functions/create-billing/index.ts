@@ -16,6 +16,48 @@ const PLAN_PRICES: Record<string, { amount: number; name: string }> = {
   '29_90': { amount: 2990, name: 'Premium' },
 };
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX_REQUESTS = 5; // Max 5 requests per hour per IP
+
+// Simple in-memory rate limiting (resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+  
+  if (!entry || now >= entry.resetTime) {
+    // New window or expired window
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - entry.count, resetIn: entry.resetTime - now };
+}
+
+function getClientIP(req: Request): string {
+  // Try various headers for client IP
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  const realIP = req.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  const cfConnectingIP = req.headers.get('cf-connecting-ip');
+  if (cfConnectingIP) {
+    return cfConnectingIP;
+  }
+  return 'unknown';
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -23,6 +65,28 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const clientIP = getClientIP(req);
+    const rateLimitKey = `create-billing:${clientIP}`;
+    const rateLimit = checkRateLimit(rateLimitKey);
+    
+    if (!rateLimit.allowed) {
+      console.warn(`Rate limit exceeded for IP: ${clientIP.substring(0, 8)}...`);
+      return new Response(
+        JSON.stringify({ error: 'Muitas requisições. Tente novamente mais tarde.' }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil(rateLimit.resetIn / 1000)),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.ceil(rateLimit.resetIn / 1000))
+          } 
+        }
+      );
+    }
+
     const abacatePayApiKey = Deno.env.get('ABACATEPAY_API_KEY');
     if (!abacatePayApiKey) {
       console.error('ABACATEPAY_API_KEY not configured');
@@ -58,7 +122,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Creating billing for:', { slug, plan, email: sanitizedEmail.substring(0, 5) + '***' });
+    console.log('Creating billing for:', { slug, plan, email: sanitizedEmail.substring(0, 5) + '***', ip: clientIP.substring(0, 8) + '...' });
 
     // Initialize Supabase client for page validation
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -197,7 +261,12 @@ serve(async (req) => {
         billingId: billingData.data.id,
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'X-RateLimit-Remaining': String(rateLimit.remaining),
+          'X-RateLimit-Reset': String(Math.ceil(rateLimit.resetIn / 1000))
+        },
       }
     );
   } catch (error: unknown) {

@@ -51,25 +51,37 @@ serve(async (req) => {
     // Get raw body for signature verification
     const rawBody = await req.text();
     
-    // Verify webhook signature if secret is configured
+    // SECURITY: Webhook signature verification is MANDATORY
     const webhookSecret = Deno.env.get('ABACATEPAY_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('CRITICAL: ABACATEPAY_WEBHOOK_SECRET not configured - rejecting all webhooks');
+      return new Response(
+        JSON.stringify({ error: 'Webhook authentication not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const signature = req.headers.get('x-webhook-signature') || 
                       req.headers.get('x-signature') || 
                       req.headers.get('x-hub-signature-256');
     
-    if (webhookSecret) {
-      const isValid = await verifySignature(rawBody, signature, webhookSecret);
-      if (!isValid) {
-        console.error('Invalid webhook signature - rejecting request');
-        return new Response(
-          JSON.stringify({ error: 'Invalid signature' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      console.log('Webhook signature verified successfully');
-    } else {
-      console.warn('ABACATEPAY_WEBHOOK_SECRET not configured - signature verification skipped');
+    if (!signature) {
+      console.error('Missing webhook signature header');
+      return new Response(
+        JSON.stringify({ error: 'Missing signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    
+    const isValid = await verifySignature(rawBody, signature, webhookSecret);
+    if (!isValid) {
+      console.error('Invalid webhook signature - rejecting request');
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    console.log('Webhook signature verified successfully');
 
     const payload = JSON.parse(rawBody);
     console.log('Webhook received:', JSON.stringify(payload, null, 2));

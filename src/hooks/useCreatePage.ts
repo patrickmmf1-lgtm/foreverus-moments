@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateImages } from "@/utils/imageValidation";
 
-// Test mode - only enabled in development AND when explicitly set via env var
-const TEST_MODE = import.meta.env.DEV && import.meta.env.VITE_TEST_MODE === 'true';
+// Test mode - TEMPORARILY ENABLED for testing
+const TEST_MODE = true;
 
 interface PageData {
   type: "couple" | "friends" | "pet";

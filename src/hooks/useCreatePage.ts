@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { validateImages } from "@/utils/imageValidation";
 
-// Flag para modo de teste - mude para false quando for para produção
-const TEST_MODE = true;
+// Test mode - only enabled in development AND when explicitly set via env var
+const TEST_MODE = import.meta.env.DEV && import.meta.env.VITE_TEST_MODE === 'true';
 
 interface PageData {
   type: "couple" | "friends" | "pet";
@@ -103,7 +103,7 @@ export function useCreatePage() {
           photo_url: photoUrls[0] || null,
           photos: photoUrls.length > 0 ? photoUrls : null,
           plan: data.plan,
-          status: TEST_MODE ? 'active' : 'pending_payment',
+          status: 'pending_payment', // Always pending - database enforces this via RLS
         })
         .select("slug")
         .single();

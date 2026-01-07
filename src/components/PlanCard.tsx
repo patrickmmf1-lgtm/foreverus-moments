@@ -19,6 +19,9 @@ interface PlanCardProps {
   icon?: React.ReactNode;
   onSelect?: () => void;
   className?: string;
+  cta?: string;
+  anchorText?: string;
+  bonuses?: string[];
 }
 
 export const PlanCard = ({
@@ -32,6 +35,9 @@ export const PlanCard = ({
   icon,
   onSelect,
   className,
+  cta,
+  anchorText,
+  bonuses,
 }: PlanCardProps) => {
   return (
     <motion.div
@@ -95,6 +101,13 @@ export const PlanCard = ({
           <p className="text-xs text-muted-foreground mt-2">
             pagamento único • acesso vitalício
           </p>
+          
+          {/* Anchor text for Premium */}
+          {anchorText && (
+            <p className="text-xs text-primary font-medium mt-3 px-2">
+              {anchorText}
+            </p>
+          )}
         </div>
 
         {/* Features */}
@@ -128,6 +141,23 @@ export const PlanCard = ({
           ))}
         </ul>
 
+        {/* Bonuses section for Premium */}
+        {bonuses && bonuses.length > 0 && (
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4">
+            <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2">
+              🎁 Bônus Premium
+            </h4>
+            <ul className="space-y-2">
+              {bonuses.map((bonus, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm text-foreground">
+                  <span className="text-primary">•</span>
+                  {bonus}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* CTA */}
         <Button
           variant={highlighted ? "neon" : "hero-outline"}
@@ -135,7 +165,7 @@ export const PlanCard = ({
           className="w-full"
           onClick={onSelect}
         >
-          {highlighted ? "Escolher Premium" : "Escolher plano"}
+          {cta || (highlighted ? "Escolher Premium" : "Escolher plano")}
         </Button>
       </div>
     </motion.div>

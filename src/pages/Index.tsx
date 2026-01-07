@@ -15,6 +15,7 @@ const plans = [{
   price: "9,90",
   description: "Perfeito para presentear",
   icon: <Gift className="w-6 h-6" />,
+  cta: "Começar simples",
   features: [{
     text: "Página ativa para sempre",
     included: true
@@ -48,8 +49,9 @@ const plans = [{
   price: "19,90",
   description: "Para usar todo dia",
   icon: <Heart className="w-6 h-6" />,
-  badge: "Mais popular",
+  badge: "Mais Popular",
   badgeType: "popular" as const,
+  cta: "Quero usar no dia a dia",
   features: [{
     text: "Página ativa para sempre",
     included: true
@@ -84,8 +86,14 @@ const plans = [{
   description: "A melhor experiência",
   icon: <Sparkles className="w-6 h-6" />,
   highlighted: true,
-  badge: "Melhor custo-benefício",
+  badge: "Experiência Completa",
   badgeType: "premium" as const,
+  cta: "Quero a experiência completa",
+  anchorText: "Por +R$10 você desbloqueia: App do casal + Ritual + Bônus Premium",
+  bonuses: [
+    "Cartão para imprimir com QR Code",
+    "Álbum do Ano (12 meses em grid)"
+  ],
   features: [{
     text: "Página ativa para sempre",
     included: true

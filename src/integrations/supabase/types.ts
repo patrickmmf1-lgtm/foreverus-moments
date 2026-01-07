@@ -44,6 +44,54 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_photos: {
+        Row: {
+          created_at: string | null
+          id: string
+          month_key: string
+          month_number: number
+          page_id: string
+          page_slug: string
+          photo_url: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          month_key: string
+          month_number: number
+          page_id: string
+          page_slug: string
+          photo_url: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          month_key?: string
+          month_number?: number
+          page_id?: string
+          page_slug?: string
+          photo_url?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_photos_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_photos_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_activity_logs: {
         Row: {
           activity_id: string

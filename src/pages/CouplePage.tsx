@@ -9,6 +9,8 @@ import { usePageData } from "@/hooks/usePageData";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import WeeklyRitualCard from "@/components/WeeklyRitualCard";
 import PhotoCarousel from "@/components/PhotoCarousel";
+import QRCodeCard from "@/components/QRCodeCard";
+import YearAlbum from "@/components/YearAlbum";
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -593,6 +595,28 @@ const CouplePage = () => {
               "{page.message}"
             </p>
           </motion.div>
+
+          {/* Premium: QR Code Card */}
+          {page.plan === '29_90' && (
+            <QRCodeCard
+              pageSlug={page.slug}
+              name1={page.name1}
+              name2={page.name2 || undefined}
+              startDate={page.start_date}
+              plan={page.plan}
+            />
+          )}
+
+          {/* Premium: Year Album */}
+          {page.plan === '29_90' && (
+            <YearAlbum
+              pageId={page.id}
+              pageSlug={page.slug}
+              plan={page.plan}
+              monthlyPhotos={[]}
+              isOwner={false}
+            />
+          )}
 
           {/* Branding footer */}
           <motion.div

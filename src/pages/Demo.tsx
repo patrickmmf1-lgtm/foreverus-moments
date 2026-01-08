@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Lock } from "lucide-react";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePlanRestrictions } from "@/hooks/usePlanRestrictions";
 import WeeklyRitualCard from "@/components/WeeklyRitualCard";
+import QRCodeCard from "@/components/QRCodeCard";
+import YearAlbum from "@/components/YearAlbum";
+import SurpriseLetter from "@/components/SurpriseLetter";
 import { DEMO_COUPLE_DATA } from "@/config/demoData";
 import { PlanType } from "@/config/planLimits";
 
@@ -38,6 +41,31 @@ const demoActivities = [
     duration: 20,
     type: "couple",
   },
+  {
+    id: "4",
+    title: "O Beijo de 6 Segundos",
+    prompt: "Parem tudo e se beijem por pelo menos 6 segundos. Estudos mostram que beijos longos aumentam a conexão!",
+    category: "carinho",
+    emoji: "💋",
+    duration: 1,
+    type: "couple",
+  },
+  {
+    id: "5",
+    title: "Jantar à Luz de Velas",
+    prompt: "Preparem juntos um jantar especial e comam à luz de velas. Pode ser algo simples, o importante é o clima!",
+    category: "romântico",
+    emoji: "🕯️",
+    duration: 60,
+    type: "couple",
+  },
+];
+
+// Demo monthly photos for Premium display
+const demoMonthlyPhotos = [
+  { month_key: 'jan', month_number: 1, photo_url: '/lovable-uploads/demo-couple-photo.jpg' },
+  { month_key: 'fev', month_number: 2, photo_url: '/lovable-uploads/demo-couple-photo.jpg' },
+  { month_key: 'mar', month_number: 3, photo_url: '/lovable-uploads/demo-couple-photo.jpg' },
 ];
 
 // Time unit card component
@@ -66,10 +94,8 @@ const Demo = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showSurprise, setShowSurprise] = useState(false);
 
-  // Plan restrictions hook
+  // Plan restrictions hook - Always Premium for demo
   const { 
     features,
     canDoActivity, 
@@ -81,7 +107,7 @@ const Demo = () => {
     incrementReroll,
     remainingActivities,
     remainingRerolls 
-  } = usePlanRestrictions(page.plan as PlanType, page.id);
+  } = usePlanRestrictions("29_90" as PlanType, page.id);
 
   const activitiesLibrary = demoActivities;
   const currentActivity = activitiesLibrary[currentActivityIndex] || activitiesLibrary[0];
@@ -175,16 +201,6 @@ const Demo = () => {
     }
   };
 
-  const handleOpenSurprise = () => {
-    setShowSurprise(true);
-    setShowConfetti(true);
-    toast.success("🎁 Surpresa aberta!", {
-      description: page.message,
-      duration: 8000,
-    });
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
-
   const scrollToActivities = () => {
     document.getElementById('activities-section')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -197,7 +213,7 @@ const Demo = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Demo banner */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-primary/90 backdrop-blur-sm text-primary-foreground text-center py-2 text-sm font-medium">
-        ✨ Esta é uma página de demonstração — <a href="/criar" className="underline hover:no-underline">Crie a sua!</a>
+        ✨ Esta é uma página de demonstração Premium — <a href="/criar" className="underline hover:no-underline">Crie a sua!</a>
       </div>
 
       {/* Confetti effect */}
@@ -241,30 +257,6 @@ const Demo = () => {
           />
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        </div>
-
-        {/* Top Header */}
-        <div className="absolute top-12 left-0 right-0 z-10 p-4 flex items-center justify-between">
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            onClick={handleOpenSurprise}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-colors"
-          >
-            <Gift className="w-4 h-4" />
-            <span>Toque para abrir sua surpresa</span>
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-colors"
-          >
-            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </motion.button>
         </div>
 
         {/* Content overlay */}
@@ -467,6 +459,27 @@ const Demo = () => {
               </div>
             </motion.div>
           )}
+
+          {/* Surprise Letter */}
+          <SurpriseLetter message={page.message} />
+
+          {/* Premium: QR Code Card */}
+          <QRCodeCard
+            pageSlug={page.slug}
+            name1={page.name1}
+            name2={page.name2}
+            startDate={page.start_date}
+            plan="29_90"
+          />
+
+          {/* Premium: Year Album */}
+          <YearAlbum
+            pageId={page.id}
+            pageSlug={page.slug}
+            plan="29_90"
+            monthlyPhotos={demoMonthlyPhotos}
+            isOwner={true}
+          />
 
           {/* CTA to create own page */}
           <motion.div

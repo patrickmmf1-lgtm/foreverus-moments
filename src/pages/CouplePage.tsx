@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Gift, Volume2, VolumeX, Loader2, Lock } from "lucide-react";
+import { Share2, Heart, RefreshCw, Check, Clock, Sparkles, ChevronDown, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { usePageData } from "@/hooks/usePageData";
@@ -11,6 +11,8 @@ import WeeklyRitualCard from "@/components/WeeklyRitualCard";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import QRCodeCard from "@/components/QRCodeCard";
 import YearAlbum from "@/components/YearAlbum";
+import SurpriseLetter from "@/components/SurpriseLetter";
+
 // Fallback activities if none in database
 const fallbackActivities = [
   {
@@ -63,6 +65,22 @@ const TimeCard = ({ value, label }: { value: number; label: string }) => (
 // Default placeholder image
 const defaultPhotoUrl = "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80";
 
+// Função para selecionar atividade baseada em seed (consistente por dia)
+function getActivityIndexForDay(pageId: string, activitiesLength: number): number {
+  const today = new Date();
+  const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const seedString = `${pageId}_${dateString}`;
+  
+  let hash = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    const char = seedString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  
+  return Math.abs(hash) % activitiesLength;
+}
+
 const CouplePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -73,8 +91,6 @@ const CouplePage = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showSurprise, setShowSurprise] = useState(false);
 
   // Plan restrictions hook - use page data once loaded
   const { 
@@ -100,6 +116,14 @@ const CouplePage = () => {
       localStorage.setItem("prasempre_couple_slug", slug);
     }
   }, [slug]);
+
+  // Set initial activity index based on page ID and date
+  useEffect(() => {
+    if (page?.id && activitiesLibrary.length > 0) {
+      const dayIndex = getActivityIndexForDay(page.id, activitiesLibrary.length);
+      setCurrentActivityIndex(dayIndex);
+    }
+  }, [page?.id, activitiesLibrary.length]);
 
   // Update clock every second
   useEffect(() => {
@@ -226,16 +250,6 @@ const CouplePage = () => {
     }
   };
 
-  const handleOpenSurprise = () => {
-    setShowSurprise(true);
-    setShowConfetti(true);
-    toast.success("🎁 Surpresa aberta!", {
-      description: page.message,
-      duration: 8000,
-    });
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
-
   const scrollToActivities = () => {
     document.getElementById('activities-section')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -294,32 +308,6 @@ const CouplePage = () => {
           <div className="absolute inset-0 bg-black/30" />
           {/* Gradient fade at bottom for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        </div>
-
-        {/* Top Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
-          {/* Tap to open surprise */}
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            onClick={handleOpenSurprise}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-colors"
-          >
-            <Gift className="w-4 h-4" />
-            <span>Toque para abrir sua surpresa</span>
-          </motion.button>
-
-          {/* Sound toggle */}
-          <motion.button
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-colors"
-          >
-            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </motion.button>
         </div>
 
         {/* Content overlay - centered at bottom */}
@@ -580,21 +568,8 @@ const CouplePage = () => {
             </motion.div>
           )}
 
-          {/* Message section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 text-center"
-          >
-            <Gift className="w-8 h-8 text-primary mx-auto mb-3" />
-            <h3 className="text-lg font-display font-bold text-foreground mb-2">
-              Mensagem especial
-            </h3>
-            <p className="text-muted-foreground italic leading-relaxed">
-              "{page.message}"
-            </p>
-          </motion.div>
+          {/* Surprise Letter - Replaces old message section */}
+          <SurpriseLetter message={page.message} />
 
           {/* Premium: QR Code Card */}
           {page.plan === '29_90' && (

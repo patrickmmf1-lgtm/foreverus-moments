@@ -477,8 +477,6 @@ const Demo = () => {
             pageId={page.id}
             pageSlug={page.slug}
             plan="29_90"
-            monthlyPhotos={demoMonthlyPhotos}
-            isOwner={true}
           />
 
           {/* CTA to create own page */}

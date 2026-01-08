@@ -511,7 +511,7 @@ const CouplePage = () => {
           {page.plan === '29_90' && <QRCodeCard pageSlug={page.slug} name1={page.name1} name2={page.name2 || undefined} startDate={page.start_date} plan={page.plan} />}
 
           {/* Premium: Year Album */}
-          {page.plan === '29_90' && <YearAlbum pageId={page.id} pageSlug={page.slug} plan={page.plan} monthlyPhotos={[]} isOwner={false} />}
+          {page.plan === '29_90' && <YearAlbum pageId={page.id} pageSlug={page.slug} plan={page.plan} />}
 
           {/* Branding footer */}
           <motion.div initial={{

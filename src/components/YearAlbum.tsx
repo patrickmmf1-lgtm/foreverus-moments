@@ -1,7 +1,10 @@
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, Upload } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from '@/integrations/supabase/client';
+import { generateSafeFileName } from '@/utils/sanitizeFileName';
+import { toast } from 'sonner';
 
 interface MonthPhoto {
   month_key: string;
@@ -13,8 +16,6 @@ interface YearAlbumProps {
   pageId: string;
   pageSlug: string;
   plan: string;
-  monthlyPhotos?: MonthPhoto[];
-  isOwner?: boolean;
 }
 
 const MONTHS = [
@@ -32,21 +33,108 @@ const MONTHS = [
   { key: 'dez', number: 12, label: 'Dez' },
 ];
 
-export const YearAlbum = ({ pageId, pageSlug, plan, monthlyPhotos = [], isOwner = false }: YearAlbumProps) => {
+export const YearAlbum = ({ pageId, pageSlug, plan }: YearAlbumProps) => {
   const isPremium = plan === '29_90';
+  const [photos, setPhotos] = useState<MonthPhoto[]>([]);
+  
+  useEffect(() => {
+    if (isPremium) {
+      fetchMonthlyPhotos();
+    }
+  }, [pageSlug, isPremium]);
+
+  const fetchMonthlyPhotos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('monthly_photos')
+        .select('*')
+        .eq('page_slug', pageSlug)
+        .order('month_number');
+      
+      if (!error && data) {
+        setPhotos(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar fotos:', error);
+    }
+  };
   
   if (!isPremium) {
     return null;
   }
 
   const getPhotoForMonth = (monthKey: string) => {
-    return monthlyPhotos.find(p => p.month_key === monthKey)?.photo_url;
+    return photos.find(p => p.month_key === monthKey)?.photo_url;
   };
 
-  const handleAddPhoto = (monthKey: string) => {
-    if (!isOwner) return;
-    // TODO: Implementar upload de foto
-    console.log('Adicionar foto para:', monthKey);
+  const handleAddPhoto = async (monthKey: string, monthNumber: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/jpg,image/png,image/webp';
+    
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        toast.error('Use apenas JPG, PNG ou WebP');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. Máximo 5MB');
+        return;
+      }
+
+      const loadingToast = toast.loading("Enviando foto...");
+
+      try {
+        const sanitizedFileName = generateSafeFileName(file.name);
+        const finalFileName = `${pageSlug}_${monthKey}_${sanitizedFileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('couple-photos')
+          .upload(finalFileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw new Error('Erro ao fazer upload');
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('couple-photos')
+          .getPublicUrl(finalFileName);
+
+        const { error: dbError } = await supabase
+          .from('monthly_photos')
+          .upsert({
+            page_id: pageId,
+            page_slug: pageSlug,
+            month_key: monthKey,
+            month_number: monthNumber,
+            photo_url: publicUrl
+          }, {
+            onConflict: 'page_id,month_key'
+          });
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw new Error('Erro ao salvar foto');
+        }
+
+        toast.success("Foto adicionada!", { id: loadingToast });
+        await fetchMonthlyPhotos();
+
+      } catch (error: any) {
+        console.error('Erro completo:', error);
+        toast.error(error.message || "Erro ao adicionar foto", { id: loadingToast });
+      }
+    };
+
+    input.click();
   };
 
   return (
@@ -71,7 +159,7 @@ export const YearAlbum = ({ pageId, pageSlug, plan, monthlyPhotos = [], isOwner 
           const photoUrl = getPhotoForMonth(month.key);
           
           return (
-            <div key={month.key} className="aspect-square relative overflow-hidden rounded-xl">
+            <div key={month.key} className="aspect-square relative overflow-hidden rounded-xl group">
               {photoUrl ? (
                 <>
                   <img
@@ -84,24 +172,22 @@ export const YearAlbum = ({ pageId, pageSlug, plan, monthlyPhotos = [], isOwner 
                       {month.label}
                     </span>
                   </div>
-                  {isOwner && (
-                    <div className="absolute top-1 right-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-6 h-6 bg-black/50 hover:bg-black/70 text-white"
-                        onClick={() => handleAddPhoto(month.key)}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-white/20"
+                      onClick={() => handleAddPhoto(month.key, month.number)}
+                    >
+                      <Upload className="w-4 h-4 mr-1" />
+                      Trocar
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <button
-                  onClick={() => handleAddPhoto(month.key)}
-                  disabled={!isOwner}
-                  className="w-full h-full bg-muted/50 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                  onClick={() => handleAddPhoto(month.key, month.number)}
+                  className="w-full h-full bg-muted/50 border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer rounded-xl"
                 >
                   <Plus className="w-5 h-5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground font-medium">
@@ -113,12 +199,6 @@ export const YearAlbum = ({ pageId, pageSlug, plan, monthlyPhotos = [], isOwner 
           );
         })}
       </div>
-
-      {!isOwner && (
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          Apenas o criador da página pode adicionar fotos
-        </p>
-      )}
     </motion.div>
   );
 };

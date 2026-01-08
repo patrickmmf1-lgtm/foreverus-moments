@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface IOSDatePickerProps {
   value?: Date;
@@ -21,38 +21,68 @@ const MONTHS = [
 ];
 
 const IOSDatePicker = ({ value, onChange }: IOSDatePickerProps) => {
-  const currentDate = value || new Date();
-  const [day, setDay] = useState(currentDate.getDate());
-  const [month, setMonth] = useState(currentDate.getMonth() + 1);
-  const [year, setYear] = useState(currentDate.getFullYear());
+  const parseInitialDate = () => {
+    if (value) {
+      return {
+        day: value.getDate(),
+        month: value.getMonth() + 1,
+        year: value.getFullYear()
+      };
+    }
+    const now = new Date();
+    return {
+      day: now.getDate(),
+      month: now.getMonth() + 1,
+      year: now.getFullYear()
+    };
+  };
+
+  const initial = parseInitialDate();
+  const [day, setDay] = useState(initial.day);
+  const [month, setMonth] = useState(initial.month);
+  const [year, setYear] = useState(initial.year);
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
-  // Atualizar a data quando os valores mudam
-  useEffect(() => {
-    const maxDay = new Date(year, month, 0).getDate();
-    const validDay = Math.min(day, maxDay);
-    const newDate = new Date(year, month - 1, validDay);
-    
-    // Não permitir datas futuras
-    const today = new Date();
-    if (newDate > today) {
-      return;
+  const updateDate = (newDay: number, newMonth: number, newYear: number) => {
+    try {
+      const maxDay = new Date(newYear, newMonth, 0).getDate();
+      const validDay = Math.min(newDay, maxDay);
+      
+      const newDate = new Date(newYear, newMonth - 1, validDay);
+      
+      // Não permitir datas futuras
+      const today = new Date();
+      if (newDate > today) {
+        return;
+      }
+      
+      onChange(newDate);
+      
+      if (validDay !== newDay) {
+        setDay(validDay);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar data:', error);
     }
-    
-    onChange(newDate);
-  }, [day, month, year, onChange]);
+  };
 
-  // Sincronizar com value externo
-  useEffect(() => {
-    if (value) {
-      setDay(value.getDate());
-      setMonth(value.getMonth() + 1);
-      setYear(value.getFullYear());
-    }
-  }, [value]);
+  const handleDayChange = (newDay: number) => {
+    setDay(newDay);
+    updateDate(newDay, month, year);
+  };
+
+  const handleMonthChange = (newMonth: number) => {
+    setMonth(newMonth);
+    updateDate(day, newMonth, year);
+  };
+
+  const handleYearChange = (newYear: number) => {
+    setYear(newYear);
+    updateDate(day, month, newYear);
+  };
 
   const selectClassName = "bg-card border border-border rounded-xl px-3 py-4 text-foreground text-center text-base focus:ring-2 focus:ring-primary focus:border-transparent outline-none cursor-pointer appearance-none";
 
@@ -61,7 +91,7 @@ const IOSDatePicker = ({ value, onChange }: IOSDatePickerProps) => {
       {/* Dia */}
       <select
         value={day}
-        onChange={(e) => setDay(parseInt(e.target.value))}
+        onChange={(e) => handleDayChange(parseInt(e.target.value))}
         className={`${selectClassName} w-20`}
       >
         {days.map(d => (
@@ -72,7 +102,7 @@ const IOSDatePicker = ({ value, onChange }: IOSDatePickerProps) => {
       {/* Mês */}
       <select
         value={month}
-        onChange={(e) => setMonth(parseInt(e.target.value))}
+        onChange={(e) => handleMonthChange(parseInt(e.target.value))}
         className={`${selectClassName} flex-1`}
       >
         {MONTHS.map(m => (
@@ -83,7 +113,7 @@ const IOSDatePicker = ({ value, onChange }: IOSDatePickerProps) => {
       {/* Ano */}
       <select
         value={year}
-        onChange={(e) => setYear(parseInt(e.target.value))}
+        onChange={(e) => handleYearChange(parseInt(e.target.value))}
         className={`${selectClassName} w-24`}
       >
         {years.map(y => (

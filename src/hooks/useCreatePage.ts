@@ -59,9 +59,11 @@ export function useCreatePage() {
           return null;
         }
         
-        for (const file of data.photoFiles) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      for (const file of data.photoFiles) {
+          // Sanitizar nome do arquivo para evitar problemas com caracteres especiais
+          const fileExt = file.name.split(".").pop()?.toLowerCase() || 'jpg';
+          const baseName = file.name.replace(`.${fileExt}`, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '_');
+          const fileName = `${baseName}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
 
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from("couple-photos")

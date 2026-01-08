@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon, Upload, Heart, Users, PawPrint, ArrowRight, Check, X } from "lucide-react";
+import { Upload, Heart, ArrowRight, Check, X } from "lucide-react";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,31 +15,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import IOSDatePicker from "@/components/IOSDatePicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCreatePage } from "@/hooks/useCreatePage";
 import { PLAN_LIMITS, PlanId } from "@/lib/planLimits";
 
 const formSchema = z.object({
-  type: z.enum(["couple", "friends", "pet"]),
+  type: z.enum(["couple"]), // Apenas casal agora
   name1: z.string().min(1, "Nome obrigatório").max(50, "Máximo 50 caracteres"),
   name2: z.string().max(50, "Máximo 50 caracteres").optional(),
   occasion: z.string().max(100, "Máximo 100 caracteres").optional(),
   startDate: z.date({ required_error: "Data obrigatória" }),
   message: z.string().min(1, "Mensagem obrigatória").max(300, "Máximo 300 caracteres"),
   plan: z.enum(["9_90", "19_90", "29_90"]),
-  email: z.string().email("Email inválido").min(1, "Email obrigatório").max(254, "Email muito longo"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -73,8 +62,15 @@ const plans = [
 
 const Criar = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [photos, setPhotos] = useState<PhotoSlot[]>([]);
   const { createPage, isLoading } = useCreatePage();
+
+  // Pegar plano da URL ou usar Premium como default
+  const planFromUrl = searchParams.get('plan');
+  const defaultPlan = (planFromUrl && ['9_90', '19_90', '29_90'].includes(planFromUrl)) 
+    ? planFromUrl as "9_90" | "19_90" | "29_90"
+    : "29_90";
 
   const {
     register,
@@ -82,16 +78,19 @@ const Criar = () => {
     formState: { errors },
     watch,
     setValue,
-    clearErrors,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: "couple",
-      plan: "29_90",
+      plan: defaultPlan,
     },
   });
 
-  const type = watch("type");
+  // Scroll para o topo ao carregar
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const message = watch("message") || "";
   const selectedPlan = watch("plan");
   const startDate = watch("startDate");
@@ -138,24 +137,13 @@ const Criar = () => {
       startDate: data.startDate,
       plan: data.plan,
       photoFiles: photos.map(p => p.file),
-      customerEmail: data.email,
     });
 
     toast.dismiss();
 
     if (result) {
-      toast.success("Redirecionando para pagamento...");
-      // Redirecionar para checkout da AbacatePay
+      toast.success("Redirecionando...");
       window.location.href = result.checkoutUrl;
-    }
-  };
-
-  const getTypeLabel = () => {
-    switch (type) {
-      case "couple": return "do casal";
-      case "friends": return "da amizade";
-      case "pet": return "do pet";
-      default: return "do casal";
     }
   };
 
@@ -173,40 +161,11 @@ const Criar = () => {
           >
             <HeartInfinity size="md" className="mx-auto mb-3" />
             <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-1">
-              Criar página {getTypeLabel()}
+              Criar página do casal
             </h1>
             <p className="text-sm text-muted-foreground">
               Preencha os dados e escolha seu plano
             </p>
-          </motion.div>
-
-          {/* Type Tabs - Mobile optimized */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-6"
-          >
-            <Tabs
-              value={type}
-              onValueChange={(v) => setValue("type", v as "couple" | "friends" | "pet")}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3 h-12 bg-card border border-border rounded-xl">
-                <TabsTrigger value="couple" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <Heart className="w-4 h-4" />
-                  <span>Casal</span>
-                </TabsTrigger>
-                <TabsTrigger value="friends" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>Amigos</span>
-                </TabsTrigger>
-                <TabsTrigger value="pet" className="h-10 gap-2 rounded-lg text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                  <PawPrint className="w-4 h-4" />
-                  <span>Pet</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
           </motion.div>
 
           {/* Form */}
@@ -215,12 +174,12 @@ const Criar = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.1 }}
               className="space-y-3"
             >
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">
-                  {maxPhotos > 1 ? "Fotos do casal" : "Foto do casal"}
+                  Selecione suas fotos
                 </Label>
                 <span className="text-xs text-muted-foreground">
                   {photos.length}/{maxPhotos} foto{maxPhotos > 1 ? 's' : ''}
@@ -309,16 +268,16 @@ const Criar = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
               className="space-y-4"
             >
               <div className="space-y-2">
                 <Label htmlFor="name1" className="text-sm">
-                  {type === "pet" ? "Nome do pet" : "Primeiro nome"}
+                  Primeiro nome
                 </Label>
                 <Input
                   id="name1"
-                  placeholder={type === "pet" ? "Ex: Thor" : "Ex: Ana"}
+                  placeholder="Ex: Ana"
                   className="input-romantic h-12 text-base"
                   {...register("name1")}
                 />
@@ -327,50 +286,25 @@ const Criar = () => {
                 )}
               </div>
 
-              {type !== "pet" && (
-                <div className="space-y-2">
-                  <Label htmlFor="name2" className="text-sm">Segundo nome</Label>
-                  <Input
-                    id="name2"
-                    placeholder="Ex: João"
-                    className="input-romantic h-12 text-base"
-                    {...register("name2")}
-                  />
-                  {errors.name2 && (
-                    <p className="text-xs text-destructive">{errors.name2.message}</p>
-                  )}
-                </div>
-              )}
-            </motion.div>
-
-            {/* Email */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.32 }}
-              className="space-y-2"
-            >
-              <Label htmlFor="email" className="text-sm">Seu email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                className="input-romantic h-12 text-base"
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Para receber a confirmação do pagamento
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="name2" className="text-sm">Segundo nome</Label>
+                <Input
+                  id="name2"
+                  placeholder="Ex: João"
+                  className="input-romantic h-12 text-base"
+                  {...register("name2")}
+                />
+                {errors.name2 && (
+                  <p className="text-xs text-destructive">{errors.name2.message}</p>
+                )}
+              </div>
             </motion.div>
 
             {/* Occasion (optional) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
+              transition={{ delay: 0.3 }}
               className="space-y-2"
             >
               <Label htmlFor="occasion" className="text-sm">Título/Ocasião (opcional)</Label>
@@ -382,49 +316,18 @@ const Criar = () => {
               />
             </motion.div>
 
-            {/* Start Date */}
+            {/* Start Date - iOS Style */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               className="space-y-2"
             >
-              <Label className="text-sm">
-                {type === "pet" ? "Data da adoção" : "Quando começaram?"}
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 justify-start text-left font-normal text-base input-romantic",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-3 h-5 w-5" />
-                    {startDate ? (
-                      format(startDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
-                    ) : (
-                      <span>Selecione a data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="center">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setValue("startDate", date);
-                        clearErrors("startDate");
-                      }
-                    }}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label className="text-sm">Quando começaram?</Label>
+              <IOSDatePicker
+                value={startDate}
+                onChange={(date) => setValue("startDate", date)}
+              />
               {errors.startDate && (
                 <p className="text-xs text-destructive">{errors.startDate.message}</p>
               )}

@@ -7,6 +7,7 @@ export interface ImageValidationResult {
 }
 
 export const validateImage = (file: File): ImageValidationResult => {
+  // Validar tipo
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       isValid: false,
@@ -14,20 +15,17 @@ export const validateImage = (file: File): ImageValidationResult => {
     };
   }
   
+  // Validar tamanho
   if (file.size > MAX_FILE_SIZE) {
+    const sizeMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(0);
     return {
       isValid: false,
-      error: `Arquivo muito grande. Máximo ${MAX_FILE_SIZE / 1024 / 1024}MB.`
+      error: `Arquivo muito grande. Máximo ${sizeMB}MB.`
     };
   }
   
-  const fileName = file.name;
-  if (!/^[a-zA-Z0-9._-]+$/.test(fileName)) {
-    return {
-      isValid: false,
-      error: 'Nome do arquivo contém caracteres inválidos.'
-    };
-  }
+  // NÃO validar nome do arquivo - aceitar qualquer nome
+  // O sistema vai sanitizar automaticamente no upload
   
   return { isValid: true };
 };
